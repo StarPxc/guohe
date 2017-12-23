@@ -1,15 +1,87 @@
 import hashlib
-
+import logging
 import pymysql
 from util import response_info,static_var_util
-
-db_password='935377012'
+logging.basicConfig(level=logging.INFO,
+                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                datefmt='%a, %d %b %Y %H:%M:%S',
+                filename='/var/www/log/guohe.log',
+                filemode='a')
+db_password='110'
 static=static_var_util.StaticVar()
-
+def DBUtil():
+    db = pymysql.Connect(
+        host='localhost',
+        port=3306,
+        user='root',
+        passwd='935377012',
+        db='just',
+        charset='utf8'
+    )
 def md5(str):
     m = hashlib.md5()
     m.update(str.encode('utf-8'))
     return m.hexdigest()
+
+#查询绩点信息
+def get_student_jidian(username):
+    db = pymysql.Connect(
+        host='localhost',
+        port=3306,
+        user='root',
+        passwd=db_password,
+        db='just',
+        charset='utf8'
+    )
+    cursor = db.cursor()
+    result=cursor.execute("select * from jidian where username=%s" % username)
+    return result
+
+#保存绩点信息
+def add_student_jidian(jidian,username):
+    db = pymysql.Connect(
+        host='localhost',
+        port=3306,
+        user='root',
+        passwd=db_password,
+        db='just',
+        charset='utf8'
+    )
+    cursor = db.cursor()
+    print("保存绩点数据")
+    sql = "update jidian set jidian='%s' where username='%s'" % (jidian, username)
+    try:
+        # 执行sql语句
+        cursor.execute(sql)
+        # 提交到数据库执行
+        db.commit()
+    except Exception as e:
+        logging.exception(e)
+        db.rollback()
+    # 关闭数据库连接
+    db.close()
+def update_student_jidian(jidian,username):
+    db = pymysql.Connect(
+        host='localhost',
+        port=3306,
+        user='root',
+        passwd=db_password,
+        db='just',
+        charset='utf8'
+    )
+    cursor = db.cursor()
+    print("更新数据")
+    sql = "update jidian set jidian='%s' where username='%s'" % (jidian, username)
+    try:
+        cursor.execute(sql)
+        db.commit()
+    except Exception as e:
+        logging.exception(e)
+        db.rollback()
+        return response_info.error(static.JUST_APK_INFO_UPDATE_ERROR, '更新失败', username)
+    finally:
+        db.close()
+
 #获取学生基本信息
 def get_student_info(username):
     db = pymysql.Connect(
@@ -22,6 +94,7 @@ def get_student_info(username):
     )
     cursor = db.cursor()
     result = cursor.execute("select * from student where username=%s" % username)
+    return result
 #保存学生信息
 def add_student_info(username,password,name,birthday,major,academy,class_num):
     db = pymysql.Connect(
@@ -41,9 +114,9 @@ def add_student_info(username,password,name,birthday,major,academy,class_num):
         cursor.execute(sql)
         # 提交到数据库执行
         db.commit()
-    except:
+    except Exception as e:
+        logging.exception(e)
         db.rollback()
-        raise
     # 关闭数据库连接
     db.close()
 #更新学生信息
@@ -112,7 +185,8 @@ def update_download_apk_info(download_info):
         cursor.execute(sql,(download_info['appname'],download_info['serverVersion'],download_info['serverFlag'],download_info['lastForce'],'http://120.25.88.41/apk/download/guohe',download_info['updateinfo'],))
         db.commit()
         return response_info.success('更新成功', download_info)
-    except:
+    except Exception as e:
+        logging.exception(e)
         db.rollback()
         return response_info.error(static.JUST_APK_INFO_UPDATE_ERROR,'更新失败', download_info)
 
@@ -140,7 +214,8 @@ def get_download_apk_info():
             i+=1
         return response_info.success('apk信息查询成功',data)
 
-    except:
+    except Exception as e:
+        logging.exception(e)
         return response_info.error(static.JUST_APK_SELECT_ERROR,'apk信息查询失败', data)
     # 关闭数据库连接
     finally:

@@ -47,7 +47,6 @@ class Point(object):
         data_list.sort(key=lambda k: k.get('score'),reverse=True)  # 按成绩降序排序
         data_list2 = []#取补考和重修后的数据
         #去除重修前和补考前的课程成绩
-
         for item in data_list:
             flag = True
             for c in data_list2:
@@ -68,7 +67,6 @@ class Point(object):
                 data_list2.remove(item)
         # pd=pandas.DataFrame(data_list2)
         # pd.to_excel(r"e://test%s.xls" % 2)
-
         for i, item in enumerate(data_list2):
             if self.is_number(data_list2[i]['score']):
                 score = float(data_list2[i]['score'].replace(r'\t','').replace(r'\n','').replace(' ',''))
