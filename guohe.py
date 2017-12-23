@@ -8,7 +8,7 @@ import json
 from werkzeug.utils import secure_filename, redirect
 import craw.horoscope
 import redis
-from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary
+from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run
 from util import  db_util, response_info
 from functools import wraps
 
@@ -16,6 +16,12 @@ app = Flask(__name__)
 UPLOAD_FOLDER='/var/www/apk'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = set(['apk'])
+
+logging.basicConfig(level=logging.INFO,
+                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                datefmt='%a, %d %b %Y %H:%M:%S',
+                filename='/var/www/log/guohe.log',
+                filemode='a')
 # 用于判断文件后缀
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.',1)[1] in ALLOWED_EXTENSIONS
@@ -49,8 +55,6 @@ def index():
 @allow_cross_domain
 def horoscope(select):
     return jsonify(craw.horoscope.craw_horoscope(select))
-
-
 @app.route('/history', methods=['post'])
 @allow_cross_domain
 def history():
@@ -111,9 +115,6 @@ def quwenTest():
         r.set('quwen', data)
         r.expire('quwen', 60 * 60 * 12)
         return Response(json.dumps(data), mimetype='application/json')
-
-
-
 @app.route('/vpnScore', methods=['post'])
 @allow_cross_domain
 def vpnScore():
@@ -129,8 +130,8 @@ def vpnScore():
 def vpnJidian():
     data, vpn_account = vpn.vpnJidian(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
-    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    print(vpn_account['username'], ' vpnJidian ', now)
+    if data['msg']=='vpn账号被占用':
+        logging.error('vpn_account'+vpn_account['username'])
     return Response(json.dumps(data), mimetype='application/json')
 
 
@@ -140,7 +141,7 @@ def vpnKebiao():
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if has_key(request.form['username'] + '_kebiao_' + request.form['semester']):
         r_data = eval(r.get(request.form['username'] + '_kebiao_' + request.form['semester']))
-        if r_data['info']!='vpn账号被占用':
+        if r_data['msg']!='vpn账号被占用' and r_data['msg']!='教务系统账号错误':
             print("从缓存中读取",' vpnKebiao ',now)
             return Response(
                 json.dumps(eval(r.get(request.form['username'] + '_kebiao_' + request.form["semester"]).decode("utf-8"))),
@@ -167,10 +168,10 @@ def vpnKebiao():
 @app.route('/vpnInfo', methods=['post'])
 @allow_cross_domain
 def vpnInfo():
-    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data, vpn_account = vpn.vpnInfo(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account,' vpnInfo ',now)
+    if data['msg']=='vpn账号被占用':
+        logging.error('vpn_account'+vpn_account['username'])
     return Response(json.dumps(data), mimetype='application/json')
 
 
@@ -218,10 +219,8 @@ def get_vpnSport():
 @app.route('/vpnRun', methods=['post'])
 @allow_cross_domain
 def get_vpnRun():
-    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    data, vpn_account = vpn.VpnGetSport(request.form['username'], request.form['password'])
+    data, vpn_account =run.getSport(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'] + "vpnRun "+now)
     return Response(json.dumps(data), mimetype='application/json')
 
 
