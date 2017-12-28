@@ -1,13 +1,17 @@
-'''
-@author Ethan
-'''
 import hashlib
+import logging
+
 import redis
 import requests
 import time
 from bs4 import BeautifulSoup
 from util import point, response_info, static_var_util, db_util
 import threading
+logging.basicConfig(level=logging.INFO,
+                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                datefmt='%a, %d %b %Y %H:%M:%S',
+                filename='/var/www/log/guohe.log',
+                filemode='a')
 static=static_var_util.StaticVar()
 lock = threading.Lock()
 headers = {
@@ -46,7 +50,8 @@ def login(username, password):
                 session.post(url=url, data=data, cookies=cookies, headers=headers, verify=False)
                 session.post('https://vpn.just.edu.cn/jsxsd/xk/,DanaInfo=jwgl.just.edu.cn,Port=8080+LoginToXk', headers=headers,
                              data={'USERNAME': username, 'PASSWORD': password}, verify=False)
-    except:
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
     finally:
         # 改完了一定要释放锁:
@@ -92,7 +97,8 @@ def xiaoli(username,password):
                 data = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号有误', '')
         else:
             data = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
-    except:
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
         raise
     finally:
@@ -136,7 +142,8 @@ def vpnScore(username, password):
                 data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
-    except:
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
         raise
     finally:
@@ -154,37 +161,22 @@ def vpnJidian(username, password):
             each_list = p.get_each_point(data['info'])
             each_list.insert(0, {'year': 'all', 'point': str(sum_point)})
             # 数据库操作
-            db, cursor = db_util.DBUtil()
-            result = cursor.execute("select * from jidian where username=%s" % username)
+            result = db_util.get_student_jidian(username)
             each_list = response_info.success('绩点查询成功',each_list)
             if result == 0:
-                print("保存数据")
                 jidian = ''
                 for item in each_list['info']:
                     jidian += item['year'] + ':' + item['point'] + '&'
-                sql = "insert into jidian(username,jidian) values ('%s','%s')" % (username, jidian)
-
-                # 执行sql语句
-                cursor.execute(sql)
-                # 提交到数据库执行
-                db.commit()
-                # 关闭数据库连接
-                db.close()
+                db_util.add_student_jidian(jidian,username)
             else:
-                print("数据已存在，执行更新操作")
                 jidian = ''
                 for item in each_list['info']:
                     jidian += item['year'] + ':' + item['point'] + '&'
-                    sql = "update jidian set jidian='%s' where username='%s'" % (jidian, username)
-                # 执行sql语句
-                cursor.execute(sql)
-                # 提交到数据库执行
-                db.commit()
-                # 关闭数据库连接
-                db.close()
+                db_util.update_student_jidian(jidian,username)
         else:
             each_list=data
-    except:
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
         raise
     return each_list,vpn_account
@@ -354,7 +346,8 @@ def VpnGetSport(username,password):
                 data_list = response_info.error(static.JUST_SPORT_ACCOUNT_ERROR, '体育学院密码错误', '')
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
-    except:
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
         raise
     finally:
@@ -418,7 +411,8 @@ def vpnGetClassrooms(username,password,school_year,area_id,building_id,zc1):
        else:
            data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
 
-   except:
+   except Exception as e:
+       logging.exception(e)
        r.rpush("vpn_account", vpn_account)
        raise
    finally:
@@ -458,7 +452,8 @@ def vpnKebiao(username, password, semester):
                 data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
-    except :
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
         raise
     finally:
@@ -526,7 +521,8 @@ def vpnInfo(username, password):
                 data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
-    except:
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
         raise
     finally:
@@ -574,4 +570,4 @@ def IsChinese(str):
         return False
 
 if __name__ == '__main__':
-  print(vpnKebiao('152210702119','935377012pxc','2017-2018-1'))
+  print(vpnJidian('152210702119','935377012pxc'))

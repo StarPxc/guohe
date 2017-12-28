@@ -9,15 +9,6 @@ logging.basicConfig(level=logging.INFO,
                 filemode='a')
 db_password='110'
 static=static_var_util.StaticVar()
-def DBUtil():
-    db = pymysql.Connect(
-        host='localhost',
-        port=3306,
-        user='root',
-        passwd='935377012',
-        db='just',
-        charset='utf8'
-    )
 def md5(str):
     m = hashlib.md5()
     m.update(str.encode('utf-8'))

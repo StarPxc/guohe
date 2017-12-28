@@ -1,3 +1,5 @@
+import logging
+
 import redis
 import requests
 from bs4 import BeautifulSoup
@@ -8,6 +10,11 @@ static=static_var_util.StaticVar()
 
 import time
 import threading
+logging.basicConfig(level=logging.INFO,
+                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                datefmt='%a, %d %b %Y %H:%M:%S',
+                filename='/var/www/log/guohe.log',
+                filemode='a')
 lock = threading.Lock()
 r= redis.Redis(host='127.0.0.1', port=6379, db=0)
 headers = {
@@ -45,7 +52,8 @@ def login():
                 }
                 session.post(url=url, data=data, cookies=cookies, headers=headers, verify=False)
                 session.get('https://vpn.just.edu.cn/,DanaInfo=jwgl.just.edu.cn,Port=8080+', verify=False)
-
+    except Exception as e:
+        logging.exception(e)
     finally:
         # 改完了一定要释放锁:
         lock.release()
@@ -53,6 +61,7 @@ def login():
 
 def getSport(username,password):
     session,vpn_account=login()
+    data_list = []
     try:
         sport_data = {
 
@@ -67,7 +76,6 @@ def getSport(username,password):
         response.encoding = 'gb2312'
         # print (response.text)
 
-        data_list = []
         form_list = []
         info = {}
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -100,9 +108,9 @@ def getSport(username,password):
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
 
-    except:
+    except Exception as e:
+        logging.exception(e)
         r.rpush("vpn_account", vpn_account)
-        raise
     finally:
         session.post('https://vpn.just.edu.cn/dana-na/auth/logout.cgi', headers=headers, verify=False)
     return data_list,vpn_account
