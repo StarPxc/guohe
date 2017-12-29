@@ -4,7 +4,7 @@
 果核是一款基于Python+SSM+Android+Ngnix的高校生活平台，目前致力于提供江苏科技大学在校大学生的课表，成绩，绩点查询服务，并集成了一些大学生感兴趣的内容
 ### 官网
 https://www.guohe3.com
-####[体验最新版](http://106.14.220.63/apk/download/guohe)
+#### [体验最新版](http://106.14.220.63/apk/download/guohe)
 ### 特色功能
 - 课表查询
 ## <img src="https://github.com/StarPxc/guohe/blob/master/screenshot/kebiao.jpg" width=360 height=640/>  
@@ -32,7 +32,7 @@ https://www.guohe3.com
 - redis
 - ...
 ## 联系我们
-qq群:<a target="_blank" href="//shang.qq.com/wpa/qunwpa?idkey=665f10c81560e3bd9af9ea3b739316c5c0d7b54d4af6bbc3bc0d745bd699aafb"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="果核 内测" title="果核 内测"></a>
+qq群:<a target="_blank" href="//shang.qq.com/wpa/qunwpa?idkey=665f10c81560e3bd9af9ea3b739316c5c0d7b54d4af6bbc3bc0d745bd699aafb">果核内测群</a>
 ## 开发者
 - 浦希成 QQ：2955317305 
 - 梁越勇 QQ：420326369
