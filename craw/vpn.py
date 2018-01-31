@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import logging
 
@@ -5,13 +6,8 @@ import redis
 import requests
 import time
 from bs4 import BeautifulSoup
-from util import point, response_info, static_var_util, db_util
+from util import point, response_info, static_var_util, db_util, xiaoli_util
 import threading
-logging.basicConfig(level=logging.INFO,
-                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                datefmt='%a, %d %b %Y %H:%M:%S',
-                filename='/var/www/log/guohe.log',
-                filemode='a')
 static=static_var_util.StaticVar()
 lock = threading.Lock()
 headers = {
@@ -91,7 +87,7 @@ def xiaoli(username,password):
                         i += 1
                     else:
                         break
-                data['all_year'] = year_list[2:i]
+                data['all_year'] = year_list[1:i]
                 data=response_info.success("校历查询成功",data)
             else:
                 data = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号有误', '')
@@ -479,7 +475,10 @@ def kebiaoUtil(session, week, semester):
             for i, td in enumerate(tds):
                 string=StringUtil(td)
                 data[week_list[i]] =string
+                temp = xiaoli_util.kb_date(semester, int(week))
             data_list.append(data)
+        temp = xiaoli_util.kb_date(semester, int(week))
+        data_list.append({'month': temp['month'],'date':temp['date']})
     else:
         data_list = '未评价'
     return data_list
@@ -514,9 +513,9 @@ def vpnInfo(username, password):
                 data_list=response_info.success('个人信息查询成功',data_list)
                 result =db_util.get_student_info(username)
                 if result == 0:
-                    db_util.add_student_info(username, md5(password), name, birthday, temp[1], temp[0], temp[3])
+                    db_util.add_student_info(username, md5(password), name, birthday, temp[1], temp[0], temp[3],datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 else:
-                    db_util.update_student_info(password, name, birthday, temp[1], temp[0], temp[3], username)
+                    db_util.update_student_info(password, name, birthday, temp[1], temp[0], temp[3], username,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             else:
                 data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
         else:
@@ -570,4 +569,4 @@ def IsChinese(str):
         return False
 
 if __name__ == '__main__':
-  print(vpnJidian('152210702119','935377012pxc'))
+  print(xiaoli('152210702119','935377012pxc'))

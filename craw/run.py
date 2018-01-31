@@ -4,17 +4,11 @@ import redis
 import requests
 from bs4 import BeautifulSoup
 from util import point, response_info, static_var_util, db_util
-import random
-import  json
 static=static_var_util.StaticVar()
 
 import time
 import threading
-logging.basicConfig(level=logging.INFO,
-                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                datefmt='%a, %d %b %Y %H:%M:%S',
-                filename='/var/www/log/guohe.log',
-                filemode='a')
+
 lock = threading.Lock()
 r= redis.Redis(host='127.0.0.1', port=6379, db=0)
 headers = {

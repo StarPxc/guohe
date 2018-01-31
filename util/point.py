@@ -1,16 +1,13 @@
 from itertools import groupby
 from operator import itemgetter
+
+import pandas
+
+from craw import student
+
+
 class Point(object):
     a=0
-    #判断成绩是否小于60
-    def is_less_60(self,score):
-        if self.is_number(score):
-            if(float(score)<60):
-                return True
-            else:
-                return False
-        else:
-            return False
     #传入参数计算绩点
     def get_jidian(self,score):
 
@@ -63,15 +60,13 @@ class Point(object):
                 data_list2.remove(item)
             elif '体育'in item['course_name'].replace(r'\t','').replace(r'\n','').replace(' ',''):
                 data_list2.remove(item)
-            elif self.is_less_60(item['score']):
-                data_list2.remove(item)
-        # pd=pandas.DataFrame(data_list2)
-        # pd.to_excel(r"e://test%s.xls" % 2)
+        pd=pandas.DataFrame(data_list2)
+        pd.to_excel(r"e://test%s.xls" % 2)
         for i, item in enumerate(data_list2):
             if self.is_number(data_list2[i]['score']):
                 score = float(data_list2[i]['score'].replace(r'\t','').replace(r'\n','').replace(' ',''))
             else:
-                score = data_list2[i]['score']
+                score =data_list2[i]['score'].replace(r'\t','').replace(r'\n','').replace(' ','')
             if data_list2[i]['credit']:
                 xuefen_jidian_all = xuefen_jidian_all + float(data_list2[i]['credit'].replace(r'\t','').replace(r'\n','').replace(' ','')) * self.get_jidian(score)  # 学分绩点=学分*绩点，这里算的是学分绩点之和
                 score_sum = score_sum + float(data_list2[i]['credit'])  # 学分之和
@@ -91,3 +86,6 @@ class Point(object):
             a={'year':key,'point':str(self.get_average_point(temp_list))}
             each_point.append(a)
         return each_point
+if __name__ == '__main__':
+    p=Point()
+    print(p.get_average_point(student.get_score('152210702116','nhs320426')['info']))

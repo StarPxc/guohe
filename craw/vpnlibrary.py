@@ -16,11 +16,6 @@ headers = {
     , 'Origin': 'https://vpn.just.edu.cn',
     'Upgrade-Insecure-Requests': '1'
 }
-logging.basicConfig(level=logging.INFO,
-                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                datefmt='%a, %d %b %Y %H:%M:%S',
-                filename='/var/www/log/guohe.log',
-                filemode='a')
 
 class Proxy():
     def __init__(self):

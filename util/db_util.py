@@ -1,13 +1,15 @@
+import datetime
 import hashlib
 import logging
 import pymysql
-from util import response_info,static_var_util
-logging.basicConfig(level=logging.INFO,
-                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                datefmt='%a, %d %b %Y %H:%M:%S',
-                filename='/var/www/log/guohe.log',
-                filemode='a')
-db_password='110'
+from util import response_info,static_var_util,public_var
+public=public_var.publicVar()
+# logging.basicConfig(level=logging.INFO,
+#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                 datefmt='%a, %d %b %Y %H:%M:%S',
+#                 filename=public.LOG_FILE_NAME,
+#                 filemode='a')
+db_password=public.DB_PASSWORD
 static=static_var_util.StaticVar()
 def md5(str):
     m = hashlib.md5()
@@ -86,8 +88,36 @@ def get_student_info(username):
     cursor = db.cursor()
     result = cursor.execute("select * from student where username=%s" % username)
     return result
+#保存反馈信息
+def add_feedback(name,content,category,contact):
+    db = pymysql.Connect(
+        host='localhost',
+        port=3306,
+        user='root',
+        passwd=db_password,
+        db='just',
+        charset='utf8'
+    )
+    dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor = db.cursor()
+    print("保存反馈信息")
+    sql = "insert into feedback(f_name,f_time,f_content,f_category,f_contact) values ('%s','%s','%s','%s','%s')" % \
+          (name,dt,content,category,contact)
+    try:
+        # 执行sql语句
+        cursor.execute(sql)
+        # 提交到数据库执行
+        db.commit()
+        return response_info.success('反馈成功',name)
+    except Exception as e:
+        logging.exception(e)
+        db.rollback()
+        return response_info.error(static.FEEDBACK_ERROR,'反馈失败', e)
+    finally:
+        # 关闭数据库连接
+        db.close()
 #保存学生信息
-def add_student_info(username,password,name,birthday,major,academy,class_num):
+def add_student_info(username,password,name,birthday,major,academy,class_num,create_time,last_visit_time):
     db = pymysql.Connect(
         host='localhost',
         port=3306,
@@ -98,8 +128,8 @@ def add_student_info(username,password,name,birthday,major,academy,class_num):
     )
     cursor = db.cursor()
     print("保存数据")
-    sql = "insert into student(username,password,s_name,birthday,major,academy,class_num) values ('%s','%s','%s','%s','%s','%s','%s')" % \
-          (username, md5(password), name, birthday, major,academy, class_num)
+    sql = "insert into student(username,password,s_name,birthday,major,academy,class_num,create_time,last_visit_time) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s')" % \
+          (username, md5(password), name, birthday, major,academy, class_num,create_time,last_visit_time)
     try:
         # 执行sql语句
         cursor.execute(sql)
@@ -111,7 +141,7 @@ def add_student_info(username,password,name,birthday,major,academy,class_num):
     # 关闭数据库连接
     db.close()
 #更新学生信息
-def update_student_info(password, name, birthday,major,academy,class_num, username):
+def update_student_info(password, name, birthday,major,academy,class_num, username,last_visit_time):
     db = pymysql.Connect(
         host='localhost',
         port=3306,
@@ -122,8 +152,8 @@ def update_student_info(password, name, birthday,major,academy,class_num, userna
     )
     cursor = db.cursor()
     print("数据已存在，执行更新操作")
-    sql = "update student set password='%s',s_name='%s',birthday='%s',major='%s',academy='%s',class_num='%s' where username=%s" % \
-          (password, name, birthday,major,academy,class_num, username)
+    sql = "update student set password='%s',s_name='%s',birthday='%s',major='%s',academy='%s',class_num='%s',last_visit_time='%s' where username=%s" % \
+          (password, name, birthday,major,academy,class_num,last_visit_time, username)
     try:
         # 执行sql语句
         cursor.execute(sql)
@@ -211,5 +241,46 @@ def get_download_apk_info():
     # 关闭数据库连接
     finally:
         db.close()
+def get_toast_info():
+    db = pymysql.Connect(
+        host='106.14.220.63',
+        port=3306,
+        user='root',
+        passwd='root',
+        db='guohe_home',
+        charset='utf8'
+    )
+    cursor = db.cursor()
+    sql = "select content   from   guohe_lite_toast   order   by   id   desc   limit   1 "
+    try:
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        return response_info.success('小程序通知查询成功', result)
+    except:
+        return response_info.error('2', '小程序通知查询失败', result)
+        # 关闭数据库连接
+    finally:
+        db.close()
+def update_toast(toast_update_info):
+    db = pymysql.Connect(
+        host='106.14.220.63',
+        port=3306,
+        user='root',
+        passwd='root',
+        db='guohe_home',
+        charset='utf8'
+    )
+    cursor = db.cursor()
+    sql = "insert into guohe_lite_toast(content,update_time) values(%s,%s) "
+    try:
+        dt = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(sql,(toast_update_info,dt))
+        db.commit()
+        return response_info.success('通知更新成功', toast_update_info)
+    except:
+        db.rollback()
+        return response_info.error(1,'更新失败', toast_update_info)
+    finally:
+        db.close()
 if __name__ == '__main__':
-    print(get_download_apk_info())
+    print(add_feedback('asda','asdsa','a','asdsa'))

@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -57,6 +59,4 @@ class Duanzi:
 
 
 if __name__ == '__main__':
-    d=Duanzi()
-    duanzi=d.getDuanzi()
-    print(duanzi)
+   logging.error('湿哒哒')

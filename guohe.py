@@ -1,27 +1,26 @@
 import base64
 import os
 import logging
-
 import datetime
 from flask import Flask, jsonify, request, make_response, Response, send_from_directory, url_for
 import json
 from werkzeug.utils import secure_filename, redirect
 import craw.horoscope
 import redis
-from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run
-from util import  db_util, response_info
+from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run,student
+from util import db_util, response_info, public_var
 from functools import wraps
 
 app = Flask(__name__)
 UPLOAD_FOLDER='/var/www/apk'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = set(['apk'])
-
-logging.basicConfig(level=logging.INFO,
-                format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-                datefmt='%a, %d %b %Y %H:%M:%S',
-                filename='/var/www/log/guohe.log',
-                filemode='a')
+public=public_var.publicVar()
+# logging.basicConfig(level=logging.INFO,
+#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+#                 datefmt='%a, %d %b %Y %H:%M:%S',
+#                 filename=public.LOG_FILE_NAME,
+#                 filemode='a')
 # 用于判断文件后缀
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.',1)[1] in ALLOWED_EXTENSIONS
@@ -311,6 +310,69 @@ def upload():
 def app_download_info_update():
     download_info = request.get_json()
     data=db_util.update_download_apk_info(download_info)
+    return jsonify(data)
+
+
+#非vpn
+@app.route('/api/score',methods=['POST'])
+@allow_cross_domain
+def score():
+    data=student.get_score(request.form['username'],request.form['password'])
+    return jsonify(data)
+@app.route('/api/gradePoint',methods=['POST'])
+@allow_cross_domain
+def grade_point():
+    data=student.get_grade_point(request.form['username'],request.form['password'])
+    return jsonify(data)
+@app.route('/api/studentInfo',methods=['POST'])
+@allow_cross_domain
+def student_info():
+    data=student.get_student_info(request.form['username'],request.form['password'])
+    return jsonify(data)
+@app.route('/api/kb',methods=['POST'])
+@allow_cross_domain
+def kb():
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    if has_key(request.form['username'] + '_kebiao_' + request.form['semester']):
+        r_data = eval(r.get(request.form['username'] + '_kebiao_' + request.form['semester']))
+        if r_data['msg'] != '用户名或密码错误':
+            print("从缓存中读取", ' kb ', now)
+            return Response(
+                json.dumps(
+                    eval(r.get(request.form['username'] + '_kebiao_' + request.form["semester"]).decode("utf-8"))),
+                mimetype='application/json')
+        else:
+            print("设置缓存", ' vpnKebiao ', now)
+            data = student.get_kb(request.form['username'], request.form['password'], request.form['semester'])
+            r.set(request.form['username'] + '_kebiao_' + request.form['semester'], data)
+            r.expire(request.form['username'] + '_kebiao_' + request.form['semester'], 60 * 60 * 12)
+            return Response(json.dumps(data), mimetype='application/json')
+    else:
+        print("设置缓存", ' kb ', now)
+        data = student.get_kb(request.form['username'], request.form['password'], request.form['semester'])
+        r.set(request.form['username'] + '_kebiao_' + request.form['semester'], data)
+        r.expire(request.form['username'] + '_kebiao_' + request.form['semester'], 60 * 60 * 12)
+        return Response(json.dumps(data), mimetype='application/json')
+@app.route('/api/xiaoli',methods=['get','post'])
+@allow_cross_domain
+def xiaoli_date():
+    data=student.get_xiaoli()
+    return jsonify(data)
+@app.route('/api/feedback',methods=['post'])
+@allow_cross_domain
+def feedback():
+    data=db_util.add_feedback(request.form['name'],request.form['content'],request.form['category'],request.form['contact'],)
+    return jsonify(data)
+
+@app.route("/updateToast",methods=['POST'])
+@allow_cross_domain
+def update_toast():
+    data=db_util.update_toast(request.form['toastUpdateInfo'])
+    return jsonify(data)
+@app.route("/getToast",methods=['GET'])
+@allow_cross_domain
+def get_toast():
+    data = db_util.get_toast_info()
     return jsonify(data)
 if __name__ == '__main__':
     from werkzeug.contrib.fixers import ProxyFix
