@@ -1,5 +1,20 @@
 
 $(function () {
+
+    //页面层-佟丽娅
+
+$("#wechat_app").click(function () {
+    layer.open({
+  type: 1,
+  title: false,
+  closeBtn: 0,
+  area: '516px',
+  skin: 'layui-layer-nobg', //没有背景色
+  shadeClose: true,
+  content: $('#tong')
+});
+})
+
     $.ajax({
         url:'/getData',
         method:'get',

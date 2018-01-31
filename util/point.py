@@ -60,8 +60,8 @@ class Point(object):
                 data_list2.remove(item)
             elif '体育'in item['course_name'].replace(r'\t','').replace(r'\n','').replace(' ',''):
                 data_list2.remove(item)
-        pd=pandas.DataFrame(data_list2)
-        pd.to_excel(r"e://test%s.xls" % 2)
+        # pd=pandas.DataFrame(data_list2)
+        # pd.to_excel(r"e://test%s.xls" % 2)
         for i, item in enumerate(data_list2):
             if self.is_number(data_list2[i]['score']):
                 score = float(data_list2[i]['score'].replace(r'\t','').replace(r'\n','').replace(' ',''))

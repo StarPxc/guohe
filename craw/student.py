@@ -85,8 +85,10 @@ def get_grade_point(username,password):
                     db_util.update_student_jidian(jidian, username)
             else:
                 each_list = response_info.error(static.JUST_NO_SCORE,'没有成绩')
-        except:
-            each_list = response_info.error(500,'教务系统异常',"")
+        except Exception as e:
+            each_list = response_info.error(500, '教务系统异常', "")
+            raise
+
         return each_list
 def get_student_info(username,password):
     reg = r'<font color="red">请先登录系统</font>'
@@ -230,7 +232,7 @@ def get_xiaoli():
     except Exception as e:
 
         data=response_info.error(500,'教务系统异常',"")
-
+        raise
     return data
 def getSport(username,password):
     session=requests.session()
@@ -278,10 +280,10 @@ def getSport(username,password):
             data_list = response_info.error(static.JUST_SPORT_ACCOUNT_ERROR, '体育学院密码错误', '')
 
     except Exception as e:
-       data_list=response_info.error(500,'教务系统异常',"")
-
+        data_list=response_info.error(500,'教务系统异常',"")
+        raise
     return data_list
 if __name__ == '__main__':
-    print(get_score('172210710108','wjx260042'))
+    print(get_grade_point('172210710108','wjx260042'))
 
 
