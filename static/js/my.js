@@ -12,6 +12,8 @@ $(function () {
             $("#users").attr('data-to',users)
             downloads=data.downloads
             $("#downloads").attr('data-to',downloads)
+            app_version=data.app_version
+            $("#app_version").html(app_version)
         },
         error:function () {
             alert("获取基本数据异常")
@@ -19,3 +21,4 @@ $(function () {
     })
 
 })
+
