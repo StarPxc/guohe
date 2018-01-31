@@ -383,11 +383,11 @@ def app_download_info_update():
 @app.route("/getData")
 @allow_cross_domain
 def get_data():
-    now_users=db_util.get_pxc_users()
-    db_util.set_users(now_users)
-    app_version=db_util.get_download_apk_info()
+    now_users=db_util2.get_pxc_users()
+    db_util2.set_users(now_users)
+    app_version=db_util2.get_download_apk_info()
 
-    data=db_util.get_data()
+    data=db_util2.get_data()
     data['app_version']=app_version['info']['serverVersion']
     print(data)
     return jsonify(data)
