@@ -4,11 +4,6 @@ import logging
 import pymysql
 from util import response_info,static_var_util,public_var
 public=public_var.publicVar()
-# logging.basicConfig(level=logging.INFO,
-#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-#                 datefmt='%a, %d %b %Y %H:%M:%S',
-#                 filename=public.LOG_FILE_NAME,
-#                 filemode='a')
 db_password=public.DB_PASSWORD
 static=static_var_util.StaticVar()
 def md5(str):

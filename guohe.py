@@ -1,14 +1,18 @@
 import base64
+import hashlib
+import hmac
 import os
 import logging
 import datetime
-from flask import Flask, jsonify, request, make_response, Response, send_from_directory, url_for
+
+import requests
+from flask import Flask, jsonify, request, make_response, Response, send_from_directory, url_for, render_template
 import json
 from werkzeug.utils import secure_filename, redirect
 import craw.horoscope
 import redis
 from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run,student
-from util import db_util, response_info, public_var
+from util import db_util, response_info, public_var, db_util2
 from functools import wraps
 
 app = Flask(__name__)
@@ -16,14 +20,10 @@ UPLOAD_FOLDER='/var/www/apk'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = set(['apk'])
 public=public_var.publicVar()
-# logging.basicConfig(level=logging.INFO,
-#                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-#                 datefmt='%a, %d %b %Y %H:%M:%S',
-#                 filename=public.LOG_FILE_NAME,
-#                 filemode='a')
-# 用于判断文件后缀
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.',1)[1] in ALLOWED_EXTENSIONS
+#跨域
 def allow_cross_domain(fun):
     @wraps(fun)
     def wrapper_fun(*args, **kwargs):
@@ -45,11 +45,6 @@ def has_key(keyName):
         if keyName == key.decode('utf-8'):
             return True
     return False
-
-
-@app.route("/")
-def index():
-    return redirect("http://106.14.220.63")
 @app.route('/horoscope/<select>', methods=['get'])
 @allow_cross_domain
 def horoscope(select):
@@ -278,39 +273,6 @@ def get_vpnBookTop100():
     r.rpush("vpn_account", vpn_account)
     print(vpn_account['username'] + " vpnBookTop100 "+now)
     return Response(json.dumps(data), mimetype='application/json')
-@app.route("/apk/getApkInfo", methods=['GET'])
-@allow_cross_domain
-def download_apk_info():
-    data=db_util.get_download_apk_info()
-    return jsonify(data)
-@app.route("/apk/download/<filename>", methods=['GET'])
-@allow_cross_domain
-def download_file(filename):
-    # 需要知道2个参数, 第1个参数是本地目录的path, 第2个参数是文件名(带扩展名)
-    directory = r'/var/www/apk'
-    data = db_util.get_download_apk_info()
-    serverVersion=data['info']['serverVersion']
-    new_fileName=filename+serverVersion+r'.apk'
-    return send_from_directory(directory, new_fileName, as_attachment=True)
-@app.route('/apk/upload',methods=['POST'],strict_slashes=False)
-@allow_cross_domain
-def upload():
-    f = request.files['file']
-    fname=secure_filename(f.filename)
-    if allowed_file(fname):
-        upload_path = os.path.join(r'/var/www/apk',secure_filename(f.filename))  #注意：没有的文件夹一定要先创建，不然会提示没有该路径
-        f.save(upload_path)
-        print(secure_filename(f.filename))
-        token = base64.b64encode(secure_filename(f.filename).encode('utf-8'))
-        return jsonify(response_info.success('上传成功',str(token)))
-    else:
-        return jsonify(response_info.error('801','文件类型不符合要求',''))
-@app.route('/apk/updateInfo',methods=['POST'])
-@allow_cross_domain
-def app_download_info_update():
-    download_info = request.get_json()
-    data=db_util.update_download_apk_info(download_info)
-    return jsonify(data)
 
 
 #非vpn
@@ -374,6 +336,84 @@ def update_toast():
 def get_toast():
     data = db_util.get_toast_info()
     return jsonify(data)
+
+
+@app.route("/apk/getApkInfo", methods=['GET'])
+@allow_cross_domain
+def download_apk_info():
+    data=db_util2.get_download_apk_info()
+    return jsonify(data)
+
+@app.route("/apk/download/<filename>", methods=['GET'])
+@allow_cross_domain
+def download_file(filename):
+    # 需要知道2个参数, 第1个参数是本地目录的path, 第2个参数是文件名(带扩展名)
+    print("进入接口")
+    directory = r'/var/www/apk'
+    data = db_util2.get_download_apk_info()
+    print(data)
+    serverVersion=data['info']['serverVersion']
+    new_fileName=filename+serverVersion+r'.apk'
+    print(new_fileName)
+    #新增下载次数
+    web_data=db_util2.get_data()
+    nowDownloads=web_data['downloads']
+    db_util2.set_downloads(int(nowDownloads)+1)
+    return send_from_directory(directory, new_fileName, as_attachment=True)
+
+@app.route('/apk/upload',methods=['POST'],strict_slashes=False)
+@allow_cross_domain
+def upload():
+    f = request.files['file']
+    fname=secure_filename(f.filename)
+    if allowed_file(fname):
+        upload_path = os.path.join(r'/var/www/apk',secure_filename(f.filename))  #注意：没有的文件夹一定要先创建，不然会提示没有该路径
+        f.save(upload_path)
+        print(secure_filename(f.filename))
+        token = base64.b64encode(secure_filename(f.filename).encode('utf-8'))
+        return jsonify(response_info.success('上传成功',str(token)))
+    else:
+        return jsonify(response_info.error('801','文件类型不符合要求',''))
+@app.route('/apk/updateInfo',methods=['POST'])
+@allow_cross_domain
+def app_download_info_update():
+    download_info = request.get_json()
+    data=db_util2.update_download_apk_info(download_info)
+    return jsonify(data)
+@app.route("/getData")
+@allow_cross_domain
+def get_data():
+    now_users=db_util2.get_pxc_users()
+    db_util2.set_users(now_users)
+    return jsonify(db_util2.get_data())
+@app.route("/")
+@allow_cross_domain
+def hello():
+    web_datas=db_util2.get_data()
+    nowClicks_web=web_datas['clicks_web']
+    print('web总点击量'+nowClicks_web)
+    afterClicks_web=int(nowClicks_web)+1
+    db_util2.set_clicks_web(str(afterClicks_web))
+
+    #获取App实时点击量
+    token = 'A28UBH2TE8IT&'
+    data = 'GET&%2Fctr_user_basic%2Fget_realtime_data&app_id%3D3103264374%26end_date%3D2017-11-11%26idx%3D10103%26start_date%3D2017-11-10'
+    data = data.replace('~', '%7E').encode('utf-8')
+    token = token.replace('-_', '+/').encode('utf-8')
+
+    m = hmac.new(token, data, hashlib.sha1)
+
+    data = hashlib.md5(m.hexdigest().encode('utf-8'))
+    sign = data.hexdigest()
+    result = requests.get(
+        "http://openapi.mta.qq.com/ctr_user_basic/get_realtime_data?app_id=3103264374&start_date=2017-11-10&end_date=2017-11-11&idx=10103&sign=" + sign)
+    app_click_data = result.json()
+    print(app_click_data)
+    clicks=app_click_data['ret_data']['SessionCount']
+    print('App实时启动量'+clicks)
+    db_util2.set_clicks_app(clicks)
+
+    return  render_template('index.html')
 if __name__ == '__main__':
     from werkzeug.contrib.fixers import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app)
