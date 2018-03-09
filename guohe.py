@@ -11,7 +11,7 @@ import json
 from werkzeug.utils import secure_filename, redirect
 import craw.horoscope
 import redis
-from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run,student
+from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run,student,cet
 from util import db_util, response_info, public_var, db_util2
 from functools import wraps
 
@@ -419,6 +419,12 @@ def hello():
     db_util2.set_clicks_app(clicks)
 
     return  render_template('index.html')
+
+
+@app.route('/cet', methods=['POST'])
+def get_cet():
+    data=cet.get_zkzh(request.form.get('ks_xm'),request.form.get('ks_sfz'),request.form.get('type'))
+    return jsonify(data)
 if __name__ == '__main__':
     from werkzeug.contrib.fixers import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app)

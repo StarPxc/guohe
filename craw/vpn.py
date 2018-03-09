@@ -68,7 +68,7 @@ def xiaoli(username,password):
             year = "".join(soup.find('p', class_='da').get_text().split())[:11]
             week = "".join(soup.find('p', class_='da').get_text().split())[11:]
             weekNum = soup.find('span', class_='shuzi').get_text()
-            data = {'year': year.strip(), 'week': week.strip(), 'weekNum': weekNum.strip()}
+            data = {'year': year.strip(), 'week': week.strip(), 'weekNum': int(weekNum.strip())%25}
             # 所有年份
             response2 = session.get(
                 'https://vpn.just.edu.cn/jsxsd/xskb/,DanaInfo=jwgl.just.edu.cn,Port=8080+xskb_list.do',

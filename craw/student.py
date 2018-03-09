@@ -141,7 +141,7 @@ def get_kb(username,password,semester):
             week_list = []
             for week in weeks:
                 week_list.append(week.attrs['value'])
-            for item in week_list[1:25]:
+            for item in week_list[1:26]:
                 data = kebiaoUtil(session, item, semester)
 
                 if data == '未评价':
@@ -225,9 +225,10 @@ def get_xiaoli():
         year = "".join(soup.find('p', class_='da').get_text().split())[:11]
         currentTab = "".join(soup.find('p', class_='da').get_text().split())[11:]
         index = soup.find('span', class_='shuzi').get_text()
+
         data['year']=year.strip()
         data['currentTab']=currentTab.strip()
-        data['index']=index.strip()
+        data['index']=int(index.strip())%25
         data=response_info.success("校历查询成功",data)
     except Exception as e:
 
@@ -284,6 +285,5 @@ def getSport(username,password):
         raise
     return data_list
 if __name__ == '__main__':
-    print(get_grade_point('172210710108','wjx260042'))
-
+    print(get_score('1445604211','189308sxd'))
 
