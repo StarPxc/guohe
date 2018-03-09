@@ -35,8 +35,8 @@ https://www.guohe3.com
 qq群:<a target="_blank" href="//shang.qq.com/wpa/qunwpa?idkey=665f10c81560e3bd9af9ea3b739316c5c0d7b54d4af6bbc3bc0d745bd699aafb">果核内测群</a>
 ### 开发者
 - 浦希成 
-<img src="https://github.com/StarPxc/guohe/blob/master/screenshot/pxc.png" width=360 height=640/>  
+<img src="https://github.com/StarPxc/guohe/blob/master/screenshot/pxc.png" />  
 - 梁越勇
-<img src="https://github.com/StarPxc/guohe/blob/master/screenshot/lyy.jpg" width=360 height=640/>  
+<img src="https://github.com/StarPxc/guohe/blob/master/screenshot/lyy.jpg" />  
 - 季航宇
-<img src="https://github.com/StarPxc/guohe/blob/master/screenshot/jhy.jpg" width=360 height=640/>  
+<img src="https://github.com/StarPxc/guohe/blob/master/screenshot/jhy.jpg" />  
