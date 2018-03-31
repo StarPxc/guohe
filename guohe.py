@@ -172,11 +172,10 @@ def vpnInfo():
 @app.route('/xiaoli', methods=['post'])
 @allow_cross_domain
 def current_xiaoli():
-    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    data, vpn_account = vpn.xiaoli(request.form['username'], request.form['password'])
-    r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'],' xiaoli ',now)
-    return Response(json.dumps(data), mimetype='application/json')
+
+    data = vpn.xiaoli(request.form['username'], request.form['password'])
+
+    return jsonify(data)
 
 
 @app.route('/kebiaoBySemesterAndWeek', methods=['post'])
@@ -279,21 +278,62 @@ def get_vpnBookTop100():
 @app.route('/api/score',methods=['POST'])
 @allow_cross_domain
 def score():
-    data=student.get_score(request.form['username'],request.form['password'])
-    return jsonify(data)
+    data, vpn_account = vpn.vpnScore(request.form['username'], request.form['password'])
+    r.rpush("vpn_account", vpn_account)
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(vpn_account['username'], ' vpnScore ', now)
+    return Response(json.dumps(data), mimetype='application/json')
+    # data=student.get_score(request.form['username'],request.form['password'])
+    # return jsonify(data)
 @app.route('/api/gradePoint',methods=['POST'])
 @allow_cross_domain
 def grade_point():
-    data=student.get_grade_point(request.form['username'],request.form['password'])
-    return jsonify(data)
+    # data=student.get_grade_point(request.form['username'],request.form['password'])
+    # return jsonify(data)
+    data, vpn_account = vpn.vpnJidian(request.form['username'], request.form['password'])
+    r.rpush("vpn_account", vpn_account)
+    if data['msg'] == 'vpn账号被占用':
+        logging.error('vpn_account' + vpn_account['username'])
+    return Response(json.dumps(data), mimetype='application/json')
 @app.route('/api/studentInfo',methods=['POST'])
 @allow_cross_domain
 def student_info():
-    data=student.get_student_info(request.form['username'],request.form['password'])
-    return jsonify(data)
+    data, vpn_account = vpn.vpnInfo(request.form['username'], request.form['password'])
+    r.rpush("vpn_account", vpn_account)
+    if data['msg'] == 'vpn账号被占用':
+        logging.error('vpn_account' + vpn_account['username'])
+    return Response(json.dumps(data), mimetype='application/json')
+    # data=student.get_student_info(request.form['username'],request.form['password'])
+    # return jsonify(data)
 @app.route('/api/kb',methods=['POST'])
 @allow_cross_domain
 def kb():
+    # now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # if has_key(request.form['username'] + '_kebiao_' + request.form['semester']):
+    #     r_data = eval(r.get(request.form['username'] + '_kebiao_' + request.form['semester']))
+    #     if r_data['msg'] != 'vpn账号被占用' and r_data['msg'] != '教务系统账号错误':
+    #         print("从缓存中读取", ' vpnKebiao ', now)
+    #         return Response(
+    #             json.dumps(
+    #                 eval(r.get(request.form['username'] + '_kebiao_' + request.form["semester"]).decode("utf-8"))),
+    #             mimetype='application/json')
+    #     else:
+    #         print("设置缓存", ' vpnKebiao ', now)
+    #         data, vpn_account = vpn.vpnKebiao(request.form['username'], request.form['password'],
+    #                                           request.form['semester'])
+    #         r.rpush("vpn_account", vpn_account)
+    #         print(vpn_account['username'])
+    #         r.set(request.form['username'] + '_kebiao_' + request.form['semester'], data)
+    #         r.expire(request.form['username'] + '_kebiao_' + request.form['semester'], 60 * 60 * 12)
+    #         return Response(json.dumps(data), mimetype='application/json')
+    # else:
+    #     print("设置缓存", ' vpnKebiao ', now)
+    #     data, vpn_account = vpn.vpnKebiao(request.form['username'], request.form['password'], request.form['semester'])
+    #     r.rpush("vpn_account", vpn_account)
+    #     print(vpn_account['username'])
+    #     r.set(request.form['username'] + '_kebiao_' + request.form['semester'], data)
+    #     r.expire(request.form['username'] + '_kebiao_' + request.form['semester'], 60 * 60 * 12)
+    #     return Response(json.dumps(data), mimetype='application/json')
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if has_key(request.form['username'] + '_kebiao_' + request.form['semester']):
         r_data = eval(r.get(request.form['username'] + '_kebiao_' + request.form['semester']))

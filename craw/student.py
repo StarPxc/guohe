@@ -219,16 +219,33 @@ def get_xiaoli():
     url='http://jwc.just.edu.cn/'
     data={}
     try:
-        response = requests.get(url, headers=headers, verify=False)
-        soup = BeautifulSoup(response.text, "html.parser")
+        # response = requests.get(url, headers=headers, verify=False)
+        # soup = BeautifulSoup(response.text, "html.parser")
+        #
+        # year = "".join(soup.find('p', class_='da').get_text().split())[:11]
+        # currentTab = "".join(soup.find('p', class_='da').get_text().split())[11:]
+        # index = soup.find('span', class_='shuzi').get_text()
 
-        year = "".join(soup.find('p', class_='da').get_text().split())[:11]
-        currentTab = "".join(soup.find('p', class_='da').get_text().split())[11:]
-        index = soup.find('span', class_='shuzi').get_text()
+        data['year']="2017-2018-2"
+        tab=datetime.datetime.now().isocalendar()[2]
 
-        data['year']=year.strip()
-        data['currentTab']=currentTab.strip()
-        data['index']=int(index.strip())%25
+        currentTab=''
+        if tab==1:
+            currentTab='星期一'
+        if tab==2:
+            currentTab='星期二'
+        if tab==3:
+            currentTab='星期三'
+        if tab==4:
+            currentTab='星期四'
+        if tab==5:
+            currentTab='星期五'
+        if tab==6:
+            currentTab='星期六'
+        if tab==7:
+            currentTab='星期日'
+        data['currentTab']=currentTab
+        data['index']=(datetime.datetime.now().isocalendar()[1]-8)%25
         data=response_info.success("校历查询成功",data)
     except Exception as e:
 
@@ -285,5 +302,5 @@ def getSport(username,password):
         raise
     return data_list
 if __name__ == '__main__':
-    print(get_score('1445604211','189308sxd'))
+    print(get_xiaoli())
 
