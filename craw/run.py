@@ -75,9 +75,11 @@ def getSport(username,password):
         soup = BeautifulSoup(response.text, 'html.parser')
         isVpnLoginSuccess = soup.find('span', class_='cssLarge')
         if not isVpnLoginSuccess:
-            print(soup)
             title = soup.find('p', attrs={'align': 'center'})
             isSportAccountLoginSuccess = title.find('font', attrs={'size': '3'})
+
+            print(isSportAccountLoginSuccess.string)
+
             if not isSportAccountLoginSuccess:
                 title = soup.find('p', attrs={'align': 'center'})
                 name = title.find('font', attrs={'size': '6'}).text
@@ -98,6 +100,10 @@ def getSport(username,password):
                 data_list.append(info)
                 data_list.append(form_list)
                 data_list = response_info.success("早操查询成功", data_list)
+                #通过一个模糊比较
+
+            elif isSportAccountLoginSuccess.string=="很抱歉，数据库中没有相关信息！":
+                data_list = response_info.error(static.JUST_SPORT_NO_DATA, '很抱歉，数据库中没有相关信息！', '')
             else:
                 data_list = response_info.error(static.JUST_SPORT_ACCOUNT_ERROR, '体育学院密码错误', '')
         else:
