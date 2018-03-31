@@ -367,6 +367,9 @@ def VpnGetSport(username,password):
                 data_list.append(info)
                 data_list.append(form_list)
                 data_list=response_info.success("俱乐部查询成功",data_list)
+            elif isSportAccountLoginSuccess.string=="很抱歉，数据库中没有相关信息！":
+                data_list = response_info.error(static.JUST_SPORT_NO_DATA, '很抱歉，数据库中没有相关信息！', '')
+
             else:
                 data_list = response_info.error(static.JUST_SPORT_ACCOUNT_ERROR, '体育学院密码错误', '')
         else:
