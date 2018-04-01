@@ -10,4 +10,5 @@ class StaticVar(object):
     JUST_APK_FILE_TYPE_ERR=801#文件类型不符合要求
     JUST_APK_INFO_UPDATE_ERROR=802#apk信息更新错误
     FEEDBACK_ERROR=900#反馈失败
+    JUST_SPORT_NO_DATA=1000
 

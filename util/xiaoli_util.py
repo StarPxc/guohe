@@ -48,8 +48,6 @@ def kb_date(semester,zc):
             data['month'] = 8
         data['date'] = table.col_values(zc)[14:21]
     return data
-if __name__ == '__main__':
-    currentWeek()
 
         
     

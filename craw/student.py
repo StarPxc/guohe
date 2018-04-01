@@ -2,7 +2,7 @@ import datetime
 import requests
 import time
 from bs4 import BeautifulSoup
-from util import response_info, static_var_util, db_util, point,xiaoli_util
+from util import response_info, static_var_util, db_util, point, xiaoli_util
 import re
 
 from util.db_util import md5
@@ -153,8 +153,9 @@ def get_kb(username,password,semester):
             else:
                 data_list = response_info.success("所有课表查询成功", data_list)
         except:
-            raise
+
             data_list=response_info.error(500,'教务系统异常',"")
+            raise
         return data_list
 def StringUtil(td):
     class_teacher=td.select('font[title="老师"]')
