@@ -32,7 +32,7 @@ $(function () {
         layer.open({
             title: false,
             type: 1,
-            area: ['349px', '349'],
+            area: ['500px', '500px'],
             shadeClose: true, //点击遮罩关闭
             content: "<img src='/static/images/public.jpg'>"
         });
@@ -43,7 +43,7 @@ $(function () {
         layer.open({
             title: false,
             type: 1,
-            area: ['349px', '349'],
+            area: ['500px', '500px'],
             shadeClose: true, //点击遮罩关闭
             content: "<img src='/static/images/logo.jpg'>"
         });
@@ -60,7 +60,8 @@ $(function () {
             $("#app_clicks").attr('data-to', clicks_app)
             users = data.users
             $("#users").attr('data-to', users)
-            downloads = data.downloads
+            downloads = parseInt(data.downloads)+1000
+            console.log(downloads)
             $("#downloads").attr('data-to', downloads)
             app_version = data.app_version
             $("#app_version").html(app_version)
