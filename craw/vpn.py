@@ -6,7 +6,7 @@ import redis
 import requests
 import time
 from bs4 import BeautifulSoup
-from util import point, response_info, static_var_util, db_util, xiaoli_util
+from util import point, response_info, static_var_util, db_util
 import threading
 static=static_var_util.StaticVar()
 lock = threading.Lock()
@@ -57,49 +57,78 @@ def login(username, password):
 
 #获取校历 当前日期，当前周，当前学期和所有学期
 def xiaoli(username,password):
-    url='https://vpn.just.edu.cn/,DanaInfo=jwc.just.edu.cn/+'
-    session,vpn_account = login(username, password)
-    data={}
-    try:
-        response = session.get(url, headers=headers, verify=False)
-        soup = BeautifulSoup(response.text, "html.parser")
-        isVpnLoginSuccess = soup.find('span', class_='cssLarge')
-        if not isVpnLoginSuccess:
-            year = "".join(soup.find('p', class_='da').get_text().split())[:11]
-            week = "".join(soup.find('p', class_='da').get_text().split())[11:]
-            weekNum = soup.find('span', class_='shuzi').get_text()
-            data = {'year': year.strip(), 'week': week.strip(), 'weekNum': weekNum.strip()}
-            # 所有年份
-            response2 = session.get(
-                'https://vpn.just.edu.cn/jsxsd/xskb/,DanaInfo=jwgl.just.edu.cn,Port=8080+xskb_list.do',
-                headers=headers, verify=False)
-            soup2 = BeautifulSoup(response2.text, "html.parser")
-            isAccountLoginSuccess = soup2.find('div', class_='dlti')
-            if not isAccountLoginSuccess:
-                select = soup2.find('select', {'id': 'xnxq01id'})
-                year_list = []
-                values = select.find_all('option')
-                for value in values:
-                    year_list.append(value.get_text())
-                i = 0
-                for item in year_list:
-                    if int(item[2:4]) >= int(username[:2]):
-                        i += 1
-                    else:
-                        break
-                data['all_year'] = year_list[1:i]
-                data=response_info.success("校历查询成功",data)
-            else:
-                data = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号有误', '')
-        else:
-            data = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
-    except Exception as e:
-        logging.exception(e)
-        r.rpush("vpn_account", vpn_account)
-        raise
-    finally:
-        session.post('https://vpn.just.edu.cn/dana-na/auth/logout.cgi', headers=headers, verify=False)
-    return data,vpn_account
+    local_date=datetime.datetime.now()
+    year=str(local_date.year)+'年'+str(local_date.month)+'月'+str(local_date.day)+'日'
+    tab = local_date.isocalendar()[2]
+    week = ''
+    if tab == 1:
+        week = '星期一'
+    if tab == 2:
+        week = '星期二'
+    if tab == 3:
+        week = '星期三'
+    if tab == 4:
+        week = '星期四'
+    if tab == 5:
+        week = '星期五'
+    if tab == 6:
+        week = '星期六'
+    if tab == 7:
+        week = '星期日'
+
+    result={'year':year,'all_year':[
+        "2017-2018-2",
+           "2017-2018-1",
+              "2016-2017-2",
+              "2016-2017-1",
+               "2015-2016-2",
+               "2015-2016-1",
+          ],'week':week,'weekNum':(datetime.datetime.now().isocalendar()[1]-8)%25}
+    data = response_info.success("校历查询成功", result)
+    return  data
+    # url='https://vpn.just.edu.cn/,DanaInfo=jwc.just.edu.cn/+'
+    # session,vpn_account = login(username, password)
+    # data={}
+    # try:
+    #     response = session.get(url, headers=headers, verify=False)
+    #     soup = BeautifulSoup(response.text, "html.parser")
+    #     isVpnLoginSuccess = soup.find('span', class_='cssLarge')
+    #     if not isVpnLoginSuccess:
+    #         year = "".join(soup.find('p', class_='da').get_text().split())[:11]
+    #         week = "".join(soup.find('p', class_='da').get_text().split())[11:]
+    #         weekNum = soup.find('span', class_='shuzi').get_text()
+    #         data = {'year': year.strip(), 'week': week.strip(), 'weekNum': int(weekNum.strip())%25}
+    #         # 所有年份
+    #         response2 = session.get(
+    #             'https://vpn.just.edu.cn/jsxsd/xskb/,DanaInfo=jwgl.just.edu.cn,Port=8080+xskb_list.do',
+    #             headers=headers, verify=False)
+    #         soup2 = BeautifulSoup(response2.text, "html.parser")
+    #         isAccountLoginSuccess = soup2.find('div', class_='dlti')
+    #         if not isAccountLoginSuccess:
+    #             select = soup2.find('select', {'id': 'xnxq01id'})
+    #             year_list = []
+    #             values = select.find_all('option')
+    #             for value in values:
+    #                 year_list.append(value.get_text())
+    #             i = 0
+    #             for item in year_list:
+    #                 if int(item[2:4]) >= int(username[:2]):
+    #                     i += 1
+    #                 else:
+    #                     break
+    #             data['all_year'] = year_list[1:i]
+    #             data=response_info.success("校历查询成功",data)
+    #         else:
+    #             data = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号有误', '')
+    #     else:
+    #         data = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
+    # except Exception as e:
+    #     logging.exception(e)
+    #     r.rpush("vpn_account", vpn_account)
+    #     raise
+    # finally:
+    #     session.post('https://vpn.just.edu.cn/dana-na/auth/logout.cgi', headers=headers, verify=False)
+    # return data,vpn_account
 
 def vpnScore(username, password):
     session,vpn_account = login(username, password)
@@ -338,6 +367,9 @@ def VpnGetSport(username,password):
                 data_list.append(info)
                 data_list.append(form_list)
                 data_list=response_info.success("俱乐部查询成功",data_list)
+            elif isSportAccountLoginSuccess.string=="很抱歉，数据库中没有相关信息！":
+                data_list = response_info.error(static.JUST_SPORT_NO_DATA, '很抱歉，数据库中没有相关信息！', '')
+
             else:
                 data_list = response_info.error(static.JUST_SPORT_ACCOUNT_ERROR, '体育学院密码错误', '')
         else:

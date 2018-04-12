@@ -2,7 +2,7 @@ import datetime
 import requests
 import time
 from bs4 import BeautifulSoup
-from util import response_info, static_var_util, db_util, point,xiaoli_util
+from util import response_info, static_var_util, db_util, point, xiaoli_util
 import re
 
 from util.db_util import md5
@@ -141,7 +141,7 @@ def get_kb(username,password,semester):
             week_list = []
             for week in weeks:
                 week_list.append(week.attrs['value'])
-            for item in week_list[1:25]:
+            for item in week_list[1:26]:
                 data = kebiaoUtil(session, item, semester)
 
                 if data == '未评价':
@@ -153,8 +153,9 @@ def get_kb(username,password,semester):
             else:
                 data_list = response_info.success("所有课表查询成功", data_list)
         except:
-            raise
+
             data_list=response_info.error(500,'教务系统异常',"")
+            raise
         return data_list
 def StringUtil(td):
     class_teacher=td.select('font[title="老师"]')
@@ -219,15 +220,33 @@ def get_xiaoli():
     url='http://jwc.just.edu.cn/'
     data={}
     try:
-        response = requests.get(url, headers=headers, verify=False)
-        soup = BeautifulSoup(response.text, "html.parser")
+        # response = requests.get(url, headers=headers, verify=False)
+        # soup = BeautifulSoup(response.text, "html.parser")
+        #
+        # year = "".join(soup.find('p', class_='da').get_text().split())[:11]
+        # currentTab = "".join(soup.find('p', class_='da').get_text().split())[11:]
+        # index = soup.find('span', class_='shuzi').get_text()
 
-        year = "".join(soup.find('p', class_='da').get_text().split())[:11]
-        currentTab = "".join(soup.find('p', class_='da').get_text().split())[11:]
-        index = soup.find('span', class_='shuzi').get_text()
-        data['year']=year.strip()
-        data['currentTab']=currentTab.strip()
-        data['index']=index.strip()
+        data['year']="2017-2018-2"
+        tab=datetime.datetime.now().isocalendar()[2]
+
+        currentTab=''
+        if tab==1:
+            currentTab='星期一'
+        if tab==2:
+            currentTab='星期二'
+        if tab==3:
+            currentTab='星期三'
+        if tab==4:
+            currentTab='星期四'
+        if tab==5:
+            currentTab='星期五'
+        if tab==6:
+            currentTab='星期六'
+        if tab==7:
+            currentTab='星期日'
+        data['currentTab']=currentTab
+        data['index']=(datetime.datetime.now().isocalendar()[1]-8)%25
         data=response_info.success("校历查询成功",data)
     except Exception as e:
 
@@ -284,6 +303,5 @@ def getSport(username,password):
         raise
     return data_list
 if __name__ == '__main__':
-    print(get_grade_point('172210710108','wjx260042'))
-
+    print(get_xiaoli())
 

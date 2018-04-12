@@ -10,7 +10,11 @@
 @time: 2018/1/15 9:43
 
 '''
+import datetime
+
 import xlrd
+import calendar
+
 def kb_date(semester,zc):
     xs = xlrd.open_workbook(r'/var/www/2017-2018.xlsx')
     table = xs.sheets()[0]
@@ -44,8 +48,6 @@ def kb_date(semester,zc):
             data['month'] = 8
         data['date'] = table.col_values(zc)[14:21]
     return data
-if __name__ == '__main__':
-    print(kb_date('2017-2018-2',21))
 
         
     

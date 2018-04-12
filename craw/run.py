@@ -77,9 +77,6 @@ def getSport(username,password):
         if not isVpnLoginSuccess:
             title = soup.find('p', attrs={'align': 'center'})
             isSportAccountLoginSuccess = title.find('font', attrs={'size': '3'})
-
-            print(isSportAccountLoginSuccess.string)
-
             if not isSportAccountLoginSuccess:
                 title = soup.find('p', attrs={'align': 'center'})
                 name = title.find('font', attrs={'size': '6'}).text
