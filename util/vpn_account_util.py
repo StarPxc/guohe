@@ -35,7 +35,7 @@ def get_vpn_account():
         lock.release()
 def add_vpn_info(username,password):
     r = redis.Redis(host='127.0.0.1', port=6379, db=0)
-    vpn_list=r.lrange('vpn_account2', 0, -1)
+    vpn_list=r.lrange('vpn_account', 0, -1)
     flag=True
     try:
         for i, item in enumerate(vpn_list):
@@ -43,11 +43,12 @@ def add_vpn_info(username,password):
             if data['username'] == username:
                 flag = False
         if flag:
-            r.rpush('vpn_account2', {'username': username, 'password': password})
+            r.rpush('vpn_account', {'username': username, 'password': password})
             return response_info.success('vpn账号添加成功', username)
         else:
             return response_info.error(static.JUST_HAS_VPN_ACCOUNT, 'vpn账号已经存在', '')
     except:
         raise
 if __name__ == '__main__':
-    print(add_vpn_info('asdasdadasdsadasdsa','asdas'))
+    print(add_vpn_info('152210702117','164219'))
+    print("hello")
