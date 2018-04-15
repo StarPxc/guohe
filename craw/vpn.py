@@ -164,7 +164,7 @@ def vpnScore(username, password):
                 else:
                     data_list = response_info.error(static.JUST_NO_SCORE, '没有成绩', '')
             else:
-                data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
+                data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号或密码错误', '')
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
     except Exception as e:
@@ -237,7 +237,7 @@ def vpnJidian(username, password):
 #                 else:
 #                     data_list = response_info.error(static.JUST_NO_EVALUATE, '未评价', '')
 #             else:
-#                 data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
+#                 data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号或密码错误', '')
 #         else:
 #             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
 #     except:
@@ -280,7 +280,7 @@ def vpnJidian(username, password):
 #                     else:
 #                         data_list = response_info.error(static.JUST_NO_EVALUATE, '未评价', '')
 #                 else:
-#                     data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
+#                     data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号或密码错误', '')
 #             else:
 #                 data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
 #         except:
@@ -435,7 +435,7 @@ def vpnGetClassrooms(username,password,school_year,area_id,building_id,zc1):
                            data_list.append(data)
                data_list = response_info.success("空教室查询成功", data_list)
            else:
-               data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
+               data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号或密码错误', '')
        else:
            data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
 
@@ -477,7 +477,7 @@ def vpnKebiao(username, password, semester):
                 else:
                     data_list=response_info.success("所有课表查询成功",data_list)
             else:
-                data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
+                data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号或密码错误', '')
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
     except Exception as e:
@@ -549,7 +549,7 @@ def vpnInfo(username, password):
                 else:
                     db_util.update_student_info(password, name, birthday, temp[1], temp[0], temp[3], username,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             else:
-                data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号错误', '')
+                data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号或密码错误', '')
         else:
             data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
     except Exception as e:
