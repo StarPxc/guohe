@@ -49,6 +49,16 @@ $(function () {
         });
     })
 
+    $("#wechat_public").click(function () {
+        layer.open({
+            title:false,
+            type: 1,
+            area: ['349px', '349'],
+            shadeClose: true, //点击遮罩关闭
+            content: "<img src='/static/images/public.jpg'>"
+        });
+    })
+
     $.ajax({
         url: '/getData',
         method: 'get',
