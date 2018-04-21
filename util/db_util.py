@@ -286,8 +286,97 @@ def update_toast(toast_update_info):
         return response_info.success('通知更新成功', toast_update_info)
     except:
         db.rollback()
-        return response_info.error(1,'更新失败', toast_update_info)
+        return response_info.error("2",'更新失败', toast_update_info)
     finally:
         db.close()
+
+def get_carousel_by_quantity(quantity):
+    db = pymysql.Connect(
+        host='120.25.88.41',
+        port=3306,
+        user='root',
+        passwd='935377012',
+        db='just',
+        charset='utf8'
+    )
+    cursor = db.cursor()
+    sql = "select title,img,url,describe_txt   from   carousel   order   by   id   desc   limit  %s  " % quantity
+
+    try:
+        cursor.execute(sql)
+        result=cursor.fetchall()
+        return response_info.success("获取轮播图成功",result)
+    except:
+        return response_info.error("2","获取轮播图失败",result)
+
+    finally:
+        db.close()
+
+def add_carousel(title,img,url,describe_txt):
+    db = pymysql.Connect(
+        host='120.25.88.41',
+        port=3306,
+        user='root',
+        passwd='935377012',
+        db='just',
+        charset='utf8'
+    )
+    cursor=db.cursor()
+    sql="insert into carousel (title,img,url,describe_txt) VALUES (%s,%s,%s,%s)"
+    try:
+        cursor.execute(sql,(title,img,url,describe_txt))
+        db.commit()
+        return response_info.success("增加轮播图成功",(title,img,url,describe_txt))
+    except:
+        return response_info.error("2","增加轮播失败",(title,img,url,describe_txt))
+    finally:
+        db.close()
+
+def add_advertisement(title,img,url,describe_txt):
+    db = pymysql.Connect(
+        host='120.25.88.41',
+        port=3306,
+        user='root',
+        passwd='935377012',
+        db='just',
+        charset='utf8'
+    )
+    cursor=db.cursor()
+    sql="insert into advertisement (title,img,url,describe_txt) VALUES (%s,%s,%s,%s)"
+    try:
+        cursor.execute(sql,(title,img,url,describe_txt))
+        db.commit()
+        return response_info.success("增加广告图成功",(title,img,url,describe_txt))
+    except:
+        return response_info.error("2","增加广告失败",(title,img,url,describe_txt))
+    finally:
+        db.close()
+
+
+def get_advertisement():
+    db = pymysql.Connect(
+        host='120.25.88.41',
+        port=3306,
+        user='root',
+        passwd='935377012',
+        db='just',
+        charset='utf8'
+    )
+    cursor = db.cursor()
+    sql = "select title,img,url,describe_txt   from   advertisement   order   by   id   desc   limit  1  "
+
+    try:
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        return response_info.success("获取广告图成功", result)
+    except:
+        return response_info.error("2","获取广告图失败", result)
+
+    finally:
+        db.close()
+
+
+
+
 if __name__ == '__main__':
     print(add_feedback('asda','asdsa','a','asdsa'))

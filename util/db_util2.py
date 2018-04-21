@@ -223,5 +223,7 @@ def set_clicks_web(numOfclicks_web):
 
 
 
+
+
 if __name__ == '__main__':
     print(get_download_apk_info())
