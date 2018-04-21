@@ -1,7 +1,6 @@
 from itertools import groupby
 from operator import itemgetter
 
-import pandas
 
 from craw import student
 

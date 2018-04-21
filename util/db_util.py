@@ -11,7 +11,18 @@ def md5(str):
     m.update(str.encode('utf-8'))
     return m.hexdigest()
 
-#查询绩点信息
+
+
+def get_db():
+    db = pymysql.Connect(
+        host='localhost',
+        port=3306,
+        user='root',
+        passwd=db_password,
+        db='just',
+        charset='utf8'
+    )
+    return db
 def get_student_jidian(username):
     db = pymysql.Connect(
         host='localhost',
@@ -35,6 +46,7 @@ def add_student_jidian(jidian,username):
         db='just',
         charset='utf8'
     )
+
     cursor = db.cursor()
     print("保存绩点数据")
     sql = "update jidian set jidian='%s' where username='%s'" % (jidian, username)

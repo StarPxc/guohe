@@ -11,12 +11,14 @@
 
 '''
 import datetime
+import threading
 
+import requests
 import xlrd
 import calendar
 
 def kb_date(semester,zc):
-    xs = xlrd.open_workbook(r'/var/www/2017-2018.xlsx')
+    xs = xlrd.open_workbook(r'C:\Users\PXC\Desktop\2017-2018.xlsx')
     table = xs.sheets()[0]
     data = {}
     if semester=='2017-2018-1':
@@ -48,6 +50,13 @@ def kb_date(semester,zc):
             data['month'] = 8
         data['date'] = table.col_values(zc)[14:21]
     return data
+# 新线程执行的代码:
+def loop():
+   requests.get("https://www.baidu.com")
+if __name__ == '__main__':
+    for i in range(20):
+        t = threading.Thread(target=loop)
+        t.start()
 
         
     
