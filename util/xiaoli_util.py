@@ -18,7 +18,7 @@ import xlrd
 import calendar
 
 def kb_date(semester,zc):
-    xs = xlrd.open_workbook(r'C:\Users\PXC\Desktop\2017-2018.xlsx')
+    xs = xlrd.open_workbook(r'/var/www/2017-2018.xlsx')
     table = xs.sheets()[0]
     data = {}
     if semester=='2017-2018-1':
