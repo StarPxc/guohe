@@ -371,12 +371,45 @@ def feedback():
 def update_toast():
     data=db_util.update_toast(request.form['toastUpdateInfo'])
     return jsonify(data)
+
 @app.route("/getToast",methods=['GET'])
 @allow_cross_domain
 def get_toast():
     data = db_util.get_toast_info()
     return jsonify(data)
 
+@app.route("/getCa",methods=['POST'])
+@allow_cross_domain
+def get_carousel():
+    quantity=request.form['quantity']
+    data=db_util.get_carousel_by_quantity(quantity)
+    return jsonify(data)
+
+@app.route("/addCa",methods=['POST'])
+@allow_cross_domain
+def add_carousel():
+    title=request.form['title']
+    img=request.form['img']
+    url=request.form['url']
+    describe_txt=request.form['describe']
+    data=db_util.add_carousel(title,img,url,describe_txt)
+    return jsonify(data)
+
+@app.route("/addAd",methods=['POST'])
+@allow_cross_domain
+def add_advertisement():
+    title=request.form['title']
+    img=request.form['img']
+    url=request.form['url']
+    describe_txt=request.form['describe']
+    data=db_util.add_advertisement(title,img,url,describe_txt)
+    return jsonify(data)
+
+@app.route("/getAd",methods=['GET'])
+@allow_cross_domain
+def get_advertisement():
+    data=db_util.get_advertisement()
+    return jsonify(data)
 
 @app.route("/apk/getApkInfo", methods=['GET'])
 @allow_cross_domain
