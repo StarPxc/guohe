@@ -305,9 +305,17 @@ def get_carousel_by_quantity(quantity):
     try:
         cursor.execute(sql)
         result=cursor.fetchall()
-        return response_info.success("获取轮播图成功",result)
+        datalist=[]
+        for tem in result:
+            format_t={}
+            format_t["title"] = tem[0]
+            format_t["img"] = tem[1]
+            format_t["url"] = tem[2]
+            format_t["describe"] = tem[3]
+            datalist.append(format_t)
+        return response_info.success("获取轮播图成功",datalist)
     except:
-        return response_info.error("2","获取轮播图失败",result)
+        return response_info.error("2","获取轮播图失败",datalist)
 
     finally:
         db.close()
@@ -368,9 +376,15 @@ def get_advertisement():
     try:
         cursor.execute(sql)
         result = cursor.fetchone()
-        return response_info.success("获取广告图成功", result)
+        format_t = {}
+        format_t["title"] = result[0]
+        format_t["img"] = result[1]
+        format_t["url"] = result[2]
+        format_t["describe"] = result[3]
+
+        return response_info.success("获取广告图成功", format_t)
     except:
-        return response_info.error("2","获取广告图失败", result)
+        return response_info.error("2","获取广告图失败", format_t)
 
     finally:
         db.close()

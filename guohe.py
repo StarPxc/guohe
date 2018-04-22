@@ -378,10 +378,10 @@ def get_toast():
     data = db_util.get_toast_info()
     return jsonify(data)
 
-@app.route("/getCa",methods=['POST'])
+@app.route("/getCa",methods=['GET'])
 @allow_cross_domain
 def get_carousel():
-    quantity=request.form['quantity']
+    quantity=3
     data=db_util.get_carousel_by_quantity(quantity)
     return jsonify(data)
 
