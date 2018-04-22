@@ -11,6 +11,6 @@
 
 '''
 class publicVar(object):
-    LOG_FILE_NAME=r'e://guohe.log'#'/var/www/log/guohe.log'
+    LOG_FILE_NAME=r'/var/www/log/guohe.log'#'/var/www/log/guohe.log'
     DB_PASSWORD='935377012'
     DB_PASSWORD2 = 'root'
