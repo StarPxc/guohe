@@ -9,7 +9,6 @@ import requests
 from flask import Flask, jsonify, request, make_response, Response, send_from_directory, url_for, render_template
 import json
 from werkzeug.utils import secure_filename, redirect
-import craw.horoscope
 import redis
 from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run,student,cet
 from util import db_util, response_info, public_var, db_util2

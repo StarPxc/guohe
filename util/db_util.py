@@ -49,7 +49,7 @@ def add_student_jidian(jidian,username):
 
     cursor = db.cursor()
     print("保存绩点数据")
-    sql = "update jidian set jidian='%s' where username='%s'" % (jidian, username)
+    sql = "insert into jidian(jidian,username) values('%s','%s')" % (jidian, username)
     try:
         # 执行sql语句
         cursor.execute(sql)

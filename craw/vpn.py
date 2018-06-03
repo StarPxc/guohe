@@ -6,7 +6,7 @@ import redis
 import requests
 import time
 from bs4 import BeautifulSoup
-from util import point, response_info, static_var_util, db_util
+from util import point, response_info, static_var_util, db_util, xiaoli_util
 import threading
 static=static_var_util.StaticVar()
 lock = threading.Lock()
