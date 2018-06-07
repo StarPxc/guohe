@@ -601,4 +601,4 @@ def IsChinese(str):
         return False
 
 if __name__ == '__main__':
-  print(xiaoli('152210702119','935377012pxc'))
+  print(vpnJidian('172210703201','1999hsxx'))

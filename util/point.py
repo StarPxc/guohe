@@ -69,8 +69,12 @@ class Point(object):
             if data_list2[i]['credit']:
                 xuefen_jidian_all = xuefen_jidian_all + float(data_list2[i]['credit'].replace(r'\t','').replace(r'\n','').replace(' ','')) * self.get_jidian(score)  # 学分绩点=学分*绩点，这里算的是学分绩点之和
                 score_sum = score_sum + float(data_list2[i]['credit'])  # 学分之和
-        result=round(xuefen_jidian_all / score_sum, 3)
-        return result
+        #一个学弟这个学期刚开始出来的两门课全是不算学分的，所以score_sum=0
+        if score_sum==0:
+            return 0
+        else:
+            result=round(xuefen_jidian_all / score_sum, 3)
+            return result
 
     #获得每一个学期的平均绩点
     def get_each_point(self,data_list):
