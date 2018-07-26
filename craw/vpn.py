@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import logging
-
+import re
 import redis
 import requests
 import time
@@ -77,6 +77,7 @@ def xiaoli(username,password):
         week = '星期日'
 
     result={'year':year,'all_year':[
+        "2018-2019-1",
         "2017-2018-2",
            "2017-2018-1",
               "2016-2017-2",
@@ -489,6 +490,71 @@ def vpnKebiao(username, password, semester):
     print("课表查询" + username + ' ' + semester)
     return data_list,vpn_account
 
+def get_all_kb(username, password, semester):
+    session,vpn_account = login(username, password)
+    data_list = []
+    try:
+        url = "https://vpn.just.edu.cn/jsxsd/xskb/,DanaInfo=jwgl.just.edu.cn,Port=8080+xskb_list.do"
+        paramrs = {'zc': '', 'xnxq01id': semester}
+        response = session.get(url, params=paramrs)
+        response.encoding = 'utf-8'
+        soup = BeautifulSoup(response.text, "html.parser")
+        isVpnLoginSuccess = soup.find('span', class_='cssLarge')
+        isAccountLoginSuccess = soup.find('div', class_='dlti')
+        isWeiPingJia=False
+        if not isVpnLoginSuccess:
+            if not isAccountLoginSuccess:
+                week_list = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+                trs = soup.select("#kbtable tr")
+                data_list = []
+
+                for tr in trs[1:]:
+
+                    data = {}
+                    for i, td in enumerate(tr.select(".kbcontent")):
+                        data[week_list[i]] = StringUtilALl(td)
+                    data_list.append(data)
+
+                if isWeiPingJia:
+                    data_list = response_info.error(static.JUST_NO_EVALUATE, '未评价', '')
+                else:
+                    data_list=response_info.success("所有课表查询成功",data_list)
+            else:
+                data_list = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号或密码错误', '')
+        else:
+            data_list = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
+    except Exception as e:
+        logging.exception(e)
+        r.rpush("vpn_account", vpn_account)
+        raise
+    finally:
+        session.post('https://vpn.just.edu.cn/dana-na/auth/logout.cgi', headers=headers, verify=False)
+    print("课表查询" + username + ' ' + semester)
+    print(data_list)
+    return data_list,vpn_account
+def StringUtilALl(td):
+    items = str(td).split('---------------------')
+
+    result = ''
+    for i, item in enumerate(items):
+
+        reg = '(<br\/>|.*style="display: none;">)(.*?)(<br\/>|<br>)(.*?)<br\/><font title="老师">(.*?)<\/font><br\/><font title="周次\(节次\)">(.*?)<\/font><br\/>'
+        re_result = re.findall(reg, item)
+        if len(re_result) == 0:  # 没课
+            return ''
+        class_num = re_result[0][1]
+        class_name = re_result[0][3]
+        class_teacher = re_result[0][4]
+        class_week = re_result[0][5]
+        resultItem = class_num + '@' + class_name + '@' + class_teacher + "@" + class_week
+        reg_class = '<font title="教室">(.*?)</font>'
+        if len(re.findall(reg_class, item)) != 0:
+            resultItem = resultItem + '@' + re.findall(reg_class, item)[0]
+        result=result+resultItem
+        if i!=len(items)-1:
+            result = result + '---------------------'
+
+    return result
 def kebiaoUtil(session, week, semester):
     data_list = []
     url = "https://vpn.just.edu.cn/jsxsd/xskb/,DanaInfo=jwgl.just.edu.cn,Port=8080+xskb_list.do"
@@ -601,4 +667,4 @@ def IsChinese(str):
         return False
 
 if __name__ == '__main__':
-  print(vpnJidian('172210703201','1999hsxx'))
+  print(get_all_kb('152210702119','935377012pxc','2017-2018-2'))

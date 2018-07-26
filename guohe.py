@@ -10,6 +10,8 @@ from flask import Flask, jsonify, request, make_response, Response, send_from_di
 import json
 from werkzeug.utils import secure_filename, redirect
 import redis
+
+import craw
 from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run,student,cet
 from util import db_util, response_info, public_var, db_util2
 from functools import wraps
@@ -476,6 +478,14 @@ def hello():
 def get_cet():
     data=cet.get_zkzh(request.form.get('ks_xm'),request.form.get('ks_sfz'),request.form.get('type'))
     return jsonify(data)
+
+#获取所有课表
+@app.route('/get_all_kb', methods=['POST'])
+def get_all_kb():
+    data, vpn_account = vpn.get_all_kb(request.form['username'], request.form['password'],
+                                      request.form['semester'])
+    r.rpush("vpn_account", vpn_account)
+    return Response(json.dumps(data), mimetype='application/json')
 if __name__ == '__main__':
     from werkzeug.contrib.fixers import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app)
