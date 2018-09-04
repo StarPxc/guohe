@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import operator
 import os
 import logging
 import datetime
@@ -280,6 +281,9 @@ def get_vpnBookTop100():
 @allow_cross_domain
 def score():
     data, vpn_account = vpn.vpnScore(request.form['username'], request.form['password'])
+    info=sorted(data['info'], key=operator.itemgetter('start_semester'),reverse=True)
+    print(info)
+    data['info']=info
     r.rpush("vpn_account", vpn_account)
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print(vpn_account['username'], ' vpnScore ', now)

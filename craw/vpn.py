@@ -44,8 +44,28 @@ def login(username, password):
 
                 }
                 session.post(url=url, data=data, cookies=cookies, headers=headers, verify=False)
-                session.post('https://vpn.just.edu.cn/jsxsd/xk/,DanaInfo=jwgl.just.edu.cn,Port=8080+LoginToXk', headers=headers,
-                             data={'USERNAME': username, 'PASSWORD': password}, verify=False)
+                try:
+                    response = session.post(url=url, data=data, headers=headers, verify=False)
+                    if response.text.find('DSIDFormDataStr') != -1:  # 已登录
+                        DSIDFormDataStr = \
+                        re.findall(r'<input id="DSIDFormDataStr" type="hidden" name="FormDataStr" value="(.*?)">',
+                                   response.text)[0]
+                        session.post(url=url, data={
+                            'btnContinue': '继续会话',
+                            'FormDataStr': DSIDFormDataStr
+                        })
+                        print("已登录")
+                    else:
+                        print("未登录")
+                    html = session.get('https://vpn.just.edu.cn/dana/home/index.cgi', verify=False)
+                    if html.text.find('江苏科技大学VPN服务') != -1:  # 登录失败
+                        raise Exception("vpn登陆失败，登录账号:{},{}".format('152210702119', '935377012'))
+                    session.post('https://vpn.just.edu.cn/jsxsd/xk/,DanaInfo=jwgl.just.edu.cn,Port=8080+LoginToXk',
+                                 headers=headers,
+                                 data={'USERNAME': username, 'PASSWORD': password}, verify=False)
+                except Exception as e:
+                    raise Exception("【】未知异常】:{}".format(e))
+        return session,vpn_account
     except Exception as e:
         logging.exception(e)
         r.rpush("vpn_account", vpn_account)
@@ -84,52 +104,10 @@ def xiaoli(username,password):
               "2016-2017-1",
                "2015-2016-2",
                "2015-2016-1",
-          ],'week':week,'weekNum':(datetime.datetime.now().isocalendar()[1]-8)%25}
+          ],'week':week,'weekNum':(datetime.datetime.now().isocalendar()[1]-35)}
     data = response_info.success("校历查询成功", result)
     return  data
-    # url='https://vpn.just.edu.cn/,DanaInfo=jwc.just.edu.cn/+'
-    # session,vpn_account = login(username, password)
-    # data={}
-    # try:
-    #     response = session.get(url, headers=headers, verify=False)
-    #     soup = BeautifulSoup(response.text, "html.parser")
-    #     isVpnLoginSuccess = soup.find('span', class_='cssLarge')
-    #     if not isVpnLoginSuccess:
-    #         year = "".join(soup.find('p', class_='da').get_text().split())[:11]
-    #         week = "".join(soup.find('p', class_='da').get_text().split())[11:]
-    #         weekNum = soup.find('span', class_='shuzi').get_text()
-    #         data = {'year': year.strip(), 'week': week.strip(), 'weekNum': int(weekNum.strip())%25}
-    #         # 所有年份
-    #         response2 = session.get(
-    #             'https://vpn.just.edu.cn/jsxsd/xskb/,DanaInfo=jwgl.just.edu.cn,Port=8080+xskb_list.do',
-    #             headers=headers, verify=False)
-    #         soup2 = BeautifulSoup(response2.text, "html.parser")
-    #         isAccountLoginSuccess = soup2.find('div', class_='dlti')
-    #         if not isAccountLoginSuccess:
-    #             select = soup2.find('select', {'id': 'xnxq01id'})
-    #             year_list = []
-    #             values = select.find_all('option')
-    #             for value in values:
-    #                 year_list.append(value.get_text())
-    #             i = 0
-    #             for item in year_list:
-    #                 if int(item[2:4]) >= int(username[:2]):
-    #                     i += 1
-    #                 else:
-    #                     break
-    #             data['all_year'] = year_list[1:i]
-    #             data=response_info.success("校历查询成功",data)
-    #         else:
-    #             data = response_info.error(static.JUST_ACCOUNT_LOGIN_ERROR, '教务系统账号有误', '')
-    #     else:
-    #         data = response_info.error(static.JUST_VPN_LOGIN_ERROR, 'vpn账号被占用', vpn_account)
-    # except Exception as e:
-    #     logging.exception(e)
-    #     r.rpush("vpn_account", vpn_account)
-    #     raise
-    # finally:
-    #     session.post('https://vpn.just.edu.cn/dana-na/auth/logout.cgi', headers=headers, verify=False)
-    # return data,vpn_account
+
 
 def vpnScore(username, password):
     session,vpn_account = login(username, password)
