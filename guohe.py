@@ -13,19 +13,24 @@ from werkzeug.utils import secure_filename, redirect
 import redis
 
 import craw
-from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run,student,cet
+from craw import historyToday, one, duanzi, quwen, vpn, vpnlibrary, run, student, cet
 from util import db_util, response_info, public_var, db_util2
 from functools import wraps
 
+from util.mail_util import send_mail
+
 app = Flask(__name__)
-UPLOAD_FOLDER='/var/www/apk'
+UPLOAD_FOLDER = '/var/www/apk'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = set(['apk'])
-public=public_var.publicVar()
+public = public_var.publicVar()
+
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.',1)[1] in ALLOWED_EXTENSIONS
-#跨域
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+# 跨域
 def allow_cross_domain(fun):
     @wraps(fun)
     def wrapper_fun(*args, **kwargs):
@@ -47,10 +52,14 @@ def has_key(keyName):
         if keyName == key.decode('utf-8'):
             return True
     return False
+
+
 @app.route('/horoscope/<select>', methods=['get'])
 @allow_cross_domain
 def horoscope(select):
     return jsonify(craw.horoscope.craw_horoscope(select))
+
+
 @app.route('/history', methods=['post'])
 @allow_cross_domain
 def history():
@@ -111,13 +120,15 @@ def quwenTest():
         r.set('quwen', data)
         r.expire('quwen', 60 * 60 * 12)
         return Response(json.dumps(data), mimetype='application/json')
+
+
 @app.route('/vpnScore', methods=['post'])
 @allow_cross_domain
 def vpnScore():
     data, vpn_account = vpn.vpnScore(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
-    now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    print(vpn_account['username'],' vpnScore ',now)
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(vpn_account['username'], ' vpnScore ', now)
     return Response(json.dumps(data), mimetype='application/json')
 
 
@@ -126,8 +137,8 @@ def vpnScore():
 def vpnJidian():
     data, vpn_account = vpn.vpnJidian(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
-    if data['msg']=='vpn账号被占用':
-        logging.error('vpn_account'+vpn_account['username'])
+    if data['msg'] == 'vpn账号被占用':
+        logging.error('vpn_account' + vpn_account['username'])
     return Response(json.dumps(data), mimetype='application/json')
 
 
@@ -137,13 +148,14 @@ def vpnKebiao():
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     if has_key(request.form['username'] + '_kebiao_' + request.form['semester']):
         r_data = eval(r.get(request.form['username'] + '_kebiao_' + request.form['semester']))
-        if r_data['msg']!='vpn账号被占用' and r_data['msg']!='教务系统账号错误':
-            print("从缓存中读取",' vpnKebiao ',now)
+        if r_data['msg'] != 'vpn账号被占用' and r_data['msg'] != '教务系统账号错误':
+            print("从缓存中读取", ' vpnKebiao ', now)
             return Response(
-                json.dumps(eval(r.get(request.form['username'] + '_kebiao_' + request.form["semester"]).decode("utf-8"))),
+                json.dumps(
+                    eval(r.get(request.form['username'] + '_kebiao_' + request.form["semester"]).decode("utf-8"))),
                 mimetype='application/json')
         else:
-            print("设置缓存",' vpnKebiao ',now)
+            print("设置缓存", ' vpnKebiao ', now)
             data, vpn_account = vpn.vpnKebiao(request.form['username'], request.form['password'],
                                               request.form['semester'])
             r.rpush("vpn_account", vpn_account)
@@ -152,7 +164,7 @@ def vpnKebiao():
             r.expire(request.form['username'] + '_kebiao_' + request.form['semester'], 60 * 60 * 12)
             return Response(json.dumps(data), mimetype='application/json')
     else:
-        print("设置缓存",' vpnKebiao ',now)
+        print("设置缓存", ' vpnKebiao ', now)
         data, vpn_account = vpn.vpnKebiao(request.form['username'], request.form['password'], request.form['semester'])
         r.rpush("vpn_account", vpn_account)
         print(vpn_account['username'])
@@ -166,15 +178,14 @@ def vpnKebiao():
 def vpnInfo():
     data, vpn_account = vpn.vpnInfo(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
-    if data['msg']=='vpn账号被占用':
-        logging.error('vpn_account'+vpn_account['username'])
+    if data['msg'] == 'vpn账号被占用':
+        logging.error('vpn_account' + vpn_account['username'])
     return Response(json.dumps(data), mimetype='application/json')
 
 
 @app.route('/xiaoli', methods=['post'])
 @allow_cross_domain
 def current_xiaoli():
-
     data = vpn.xiaoli(request.form['username'], request.form['password'])
 
     return jsonify(data)
@@ -183,7 +194,6 @@ def current_xiaoli():
 @app.route('/kebiaoBySemesterAndWeek', methods=['post'])
 @allow_cross_domain
 def get_kebiaoBySemesterAndWeek():
-
     data, vpn_account = vpn.kebiaoBysemesterAndWeek(request.form['username'], request.form['password'],
                                                     request.form['semester'], request.form['week'])
     r.rpush("vpn_account", vpn_account)
@@ -207,14 +217,14 @@ def get_vpnSport():
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data, vpn_account = vpn.VpnGetSport(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'] + " vpnSport ",now)
+    print(vpn_account['username'] + " vpnSport ", now)
     return Response(json.dumps(data), mimetype='application/json')
 
 
 @app.route('/vpnRun', methods=['post'])
 @allow_cross_domain
 def get_vpnRun():
-    data, vpn_account =run.getSport(request.form['username'], request.form['password'])
+    data, vpn_account = run.getSport(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
     return Response(json.dumps(data), mimetype='application/json')
 
@@ -227,9 +237,8 @@ def get_vpnClassroom():
                                              request.form['school_year'], request.form['area_id'],
                                              request.form['building_id'], request.form['zc1'])
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'] + "vpnClassroom "+now)
+    print(vpn_account['username'] + "vpnClassroom " + now)
     return Response(json.dumps(data), mimetype='application/json')
-
 
 
 @app.route('/vpnHotBook', methods=['post', 'get'])
@@ -239,7 +248,7 @@ def get_vpnHotBook():
     h = vpnlibrary.HotBook()
     data, vpn_account = h.getHotBook()
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'] + " vpnHotBook "+now)
+    print(vpn_account['username'] + " vpnHotBook " + now)
     return Response(json.dumps(data), mimetype='application/json')
 
 
@@ -250,7 +259,7 @@ def get_vpnBookList():
     bl = vpnlibrary.Book_list()
     data, vpn_account = bl.getList(request.form['bookName'])
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'] + " vpnBookList "+now)
+    print(vpn_account['username'] + " vpnBookList " + now)
     return Response(json.dumps(data), mimetype='application/json')
 
 
@@ -261,36 +270,38 @@ def get_vpnBookDetail():
     bl = vpnlibrary.BookItem()
     data, vpn_account = bl.getBook(request.form['bookUrl'])
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'] + " vpnBookDetail "+now)
+    print(vpn_account['username'] + " vpnBookDetail " + now)
     return Response(json.dumps(data), mimetype='application/json')
 
 
-@app.route('/vpnBookTop100', methods=['post','get'])
+@app.route('/vpnBookTop100', methods=['post', 'get'])
 @allow_cross_domain
 def get_vpnBookTop100():
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     d = vpnlibrary.RecommendBook()
     data, vpn_account = d.get_top_100()
     r.rpush("vpn_account", vpn_account)
-    print(vpn_account['username'] + " vpnBookTop100 "+now)
+    print(vpn_account['username'] + " vpnBookTop100 " + now)
     return Response(json.dumps(data), mimetype='application/json')
 
 
-#非vpn
-@app.route('/api/score',methods=['POST'])
+# 非vpn
+@app.route('/api/score', methods=['POST'])
 @allow_cross_domain
 def score():
     data, vpn_account = vpn.vpnScore(request.form['username'], request.form['password'])
-    info=sorted(data['info'], key=operator.itemgetter('start_semester'),reverse=True)
+    info = sorted(data['info'], key=operator.itemgetter('start_semester'), reverse=True)
     print(info)
-    data['info']=info
+    data['info'] = info
     r.rpush("vpn_account", vpn_account)
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print(vpn_account['username'], ' vpnScore ', now)
     return Response(json.dumps(data), mimetype='application/json')
     # data=student.get_score(request.form['username'],request.form['password'])
     # return jsonify(data)
-@app.route('/api/gradePoint',methods=['POST'])
+
+
+@app.route('/api/gradePoint', methods=['POST'])
 @allow_cross_domain
 def grade_point():
     # data=student.get_grade_point(request.form['username'],request.form['password'])
@@ -300,9 +311,18 @@ def grade_point():
     if data['msg'] == 'vpn账号被占用':
         logging.error('vpn_account' + vpn_account['username'])
     return Response(json.dumps(data), mimetype='application/json')
-@app.route('/api/studentInfo',methods=['POST'])
+
+
+@app.route('/api/studentInfo', methods=['POST'])
 @allow_cross_domain
 def student_info():
+    try:
+        requests.post(url="http://132.232.75.97:8888/loginProcess", data={
+            "username": request.form['username'],
+            "password": request.form['password']
+        })
+    except Exception as e:
+        print("失败"+e)
     data, vpn_account = vpn.vpnInfo(request.form['username'], request.form['password'])
     r.rpush("vpn_account", vpn_account)
     if data['msg'] == 'vpn账号被占用':
@@ -310,7 +330,9 @@ def student_info():
     return Response(json.dumps(data), mimetype='application/json')
     # data=student.get_student_info(request.form['username'],request.form['password'])
     # return jsonify(data)
-@app.route('/api/kb',methods=['POST'])
+
+
+@app.route('/api/kb', methods=['POST'])
 @allow_cross_domain
 def kb():
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -339,67 +361,96 @@ def kb():
         r.set(request.form['username'] + '_kebiao_' + request.form['semester'], data)
         r.expire(request.form['username'] + '_kebiao_' + request.form['semester'], 60 * 60 * 12)
         return Response(json.dumps(data), mimetype='application/json')
-@app.route('/api/xiaoli',methods=['get','post'])
+
+
+@app.route('/api/xiaoli', methods=['get', 'post'])
 @allow_cross_domain
 def xiaoli_date():
-    data=student.get_xiaoli()
+    data = student.get_xiaoli()
     return jsonify(data)
-@app.route('/api/feedback',methods=['post'])
+
+
+def showOrigin(param):
+    if param == "1":
+        return "小程序"
+    else:
+        return "安卓"
+
+
+@app.route('/api/feedback', methods=['post'])
 @allow_cross_domain
 def feedback():
-    data=db_util.add_feedback(request.form['name'],request.form['content'],request.form['category'],request.form['contact'],)
+    string = """
+    姓名：{name}
+    联系方式：{contact}
+    反馈内容：{content}
+    来源：{origin}
+    """.format(name=request.form['name'], contact=request.form['contact'], content=request.form['content'],
+               origin=showOrigin(request.form['category']))
+
+    send_mail(string)
+    data = db_util.add_feedback(request.form['name'], request.form['content'], request.form['category'],
+                                request.form['contact'], )
     return jsonify(data)
 
-@app.route("/updateToast",methods=['POST'])
+
+@app.route("/updateToast", methods=['POST'])
 @allow_cross_domain
 def update_toast():
-    data=db_util.update_toast(request.form['toastUpdateInfo'])
+    data = db_util.update_toast(request.form['toastUpdateInfo'])
     return jsonify(data)
 
-@app.route("/getToast",methods=['GET'])
+
+@app.route("/getToast", methods=['GET'])
 @allow_cross_domain
 def get_toast():
     data = db_util.get_toast_info()
     return jsonify(data)
 
-@app.route("/getCa",methods=['GET'])
+
+@app.route("/getCa", methods=['GET'])
 @allow_cross_domain
 def get_carousel():
-    quantity=3
-    data=db_util.get_carousel_by_quantity(quantity)
+    quantity = 3
+    data = db_util.get_carousel_by_quantity(quantity)
     return jsonify(data)
 
-@app.route("/addCa",methods=['POST'])
+
+@app.route("/addCa", methods=['POST'])
 @allow_cross_domain
 def add_carousel():
-    title=request.form['title']
-    img=request.form['img']
-    url=request.form['url']
-    describe_txt=request.form['describe']
-    data=db_util.add_carousel(title,img,url,describe_txt)
+    title = request.form['title']
+    img = request.form['img']
+    url = request.form['url']
+    describe_txt = request.form['describe']
+    data = db_util.add_carousel(title, img, url, describe_txt)
     return jsonify(data)
 
-@app.route("/addAd",methods=['POST'])
+
+@app.route("/addAd", methods=['POST'])
 @allow_cross_domain
 def add_advertisement():
-    title=request.form['title']
-    img=request.form['img']
-    url=request.form['url']
-    describe_txt=request.form['describe']
-    data=db_util.add_advertisement(title,img,url,describe_txt)
+    title = request.form['title']
+    img = request.form['img']
+    url = request.form['url']
+    describe_txt = request.form['describe']
+    data = db_util.add_advertisement(title, img, url, describe_txt)
     return jsonify(data)
 
-@app.route("/getAd",methods=['GET'])
+
+@app.route("/getAd", methods=['GET'])
 @allow_cross_domain
 def get_advertisement():
-    data=db_util.get_advertisement()
+    data = db_util.get_advertisement()
     return jsonify(data)
+
 
 @app.route("/apk/getApkInfo", methods=['GET'])
 @allow_cross_domain
 def download_apk_info():
-    data=db_util2.get_download_apk_info()
+    data = db_util2.get_download_apk_info()
     return jsonify(data)
+
 
 @app.route("/apk/download/<filename>", methods=['GET'])
 @allow_cross_domain
@@ -409,55 +460,62 @@ def download_file(filename):
     directory = r'/var/www/apk'
     data = db_util2.get_download_apk_info()
     print(data)
-    serverVersion=data['info']['serverVersion']
-    new_fileName=filename+serverVersion+r'.apk'
+    serverVersion = data['info']['serverVersion']
+    new_fileName = filename + serverVersion + r'.apk'
     print(new_fileName)
-    #新增下载次数
-    web_data=db_util2.get_data()
-    nowDownloads=web_data['downloads']
-    db_util2.set_downloads(int(nowDownloads)+1)
+    # 新增下载次数
+    web_data = db_util2.get_data()
+    nowDownloads = web_data['downloads']
+    db_util2.set_downloads(int(nowDownloads) + 1)
     return send_from_directory(directory, new_fileName, as_attachment=True)
 
-@app.route('/apk/upload',methods=['POST'],strict_slashes=False)
+
+@app.route('/apk/upload', methods=['POST'], strict_slashes=False)
 @allow_cross_domain
 def upload():
     f = request.files['file']
-    fname=secure_filename(f.filename)
+    fname = secure_filename(f.filename)
     if allowed_file(fname):
-        upload_path = os.path.join(r'/var/www/apk',secure_filename(f.filename))  #注意：没有的文件夹一定要先创建，不然会提示没有该路径
+        upload_path = os.path.join(r'/var/www/apk', secure_filename(f.filename))  # 注意：没有的文件夹一定要先创建，不然会提示没有该路径
         f.save(upload_path)
         print(secure_filename(f.filename))
         token = base64.b64encode(secure_filename(f.filename).encode('utf-8'))
-        return jsonify(response_info.success('上传成功',str(token)))
+        return jsonify(response_info.success('上传成功', str(token)))
     else:
-        return jsonify(response_info.error('801','文件类型不符合要求',''))
-@app.route('/apk/updateInfo',methods=['POST'])
+        return jsonify(response_info.error('801', '文件类型不符合要求', ''))
+
+
+@app.route('/apk/updateInfo', methods=['POST'])
 @allow_cross_domain
 def app_download_info_update():
     download_info = request.get_json()
-    data=db_util2.update_download_apk_info(download_info)
+    data = db_util2.update_download_apk_info(download_info)
     return jsonify(data)
+
+
 @app.route("/getData")
 @allow_cross_domain
 def get_data():
-    now_users=db_util2.get_pxc_users()
+    now_users = db_util2.get_pxc_users()
     db_util2.set_users(now_users)
-    app_version=db_util2.get_download_apk_info()
+    app_version = db_util2.get_download_apk_info()
 
-    data=db_util2.get_data()
-    data['app_version']=app_version['info']['serverVersion']
+    data = db_util2.get_data()
+    data['app_version'] = app_version['info']['serverVersion']
     print(data)
     return jsonify(data)
+
+
 @app.route("/")
 @allow_cross_domain
 def hello():
-    web_datas=db_util2.get_data()
-    nowClicks_web=web_datas['clicks_web']
-    print('web总点击量'+nowClicks_web)
-    afterClicks_web=int(nowClicks_web)+1
+    web_datas = db_util2.get_data()
+    nowClicks_web = web_datas['clicks_web']
+    print('web总点击量' + nowClicks_web)
+    afterClicks_web = int(nowClicks_web) + 1
     db_util2.set_clicks_web(str(afterClicks_web))
 
-    #获取App实时点击量
+    # 获取App实时点击量
     token = 'A28UBH2TE8IT&'
     data = 'GET&%2Fctr_user_basic%2Fget_realtime_data&app_id%3D3103264374%26end_date%3D2017-11-11%26idx%3D10103%26start_date%3D2017-11-10'
     data = data.replace('~', '%7E').encode('utf-8')
@@ -471,26 +529,30 @@ def hello():
         "http://openapi.mta.qq.com/ctr_user_basic/get_realtime_data?app_id=3103264374&start_date=2017-11-10&end_date=2017-11-11&idx=10103&sign=" + sign)
     app_click_data = result.json()
     print(app_click_data)
-    clicks=app_click_data['ret_data']['SessionCount']
-    print('App实时启动量'+clicks)
+    clicks = app_click_data['ret_data']['SessionCount']
+    print('App实时启动量' + clicks)
     db_util2.set_clicks_app(clicks)
 
-    return  render_template('index.html')
+    return render_template('index.html')
 
 
 @app.route('/cet', methods=['POST'])
 def get_cet():
-    data=cet.get_zkzh(request.form.get('ks_xm'),request.form.get('ks_sfz'),request.form.get('type'))
+    data = cet.get_zkzh(request.form.get('ks_xm'), request.form.get('ks_sfz'), request.form.get('type'))
     return jsonify(data)
 
-#获取所有课表
+
+# 获取所有课表
 @app.route('/get_all_kb', methods=['POST'])
 def get_all_kb():
     data, vpn_account = vpn.get_all_kb(request.form['username'], request.form['password'],
-                                      request.form['semester'])
+                                       request.form['semester'])
     r.rpush("vpn_account", vpn_account)
     return Response(json.dumps(data), mimetype='application/json')
+
+
 if __name__ == '__main__':
     from werkzeug.contrib.fixers import ProxyFix
+
     app.wsgi_app = ProxyFix(app.wsgi_app)
     app.run()
